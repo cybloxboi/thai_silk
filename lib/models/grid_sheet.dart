@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 
 class GridSheet {
-  GridSheet({
-    required this.name,
-    required this.cells,
-  });
+  GridSheet({required this.name, required this.cells});
 
   factory GridSheet.blank({
     required String name,
@@ -13,10 +10,7 @@ class GridSheet {
   }) {
     return GridSheet(
       name: name,
-      cells: List.generate(
-        rows,
-        (_) => List<Color?>.filled(columns, null),
-      ),
+      cells: List.generate(rows, (_) => List<Color?>.filled(columns, null)),
     );
   }
 
@@ -65,10 +59,7 @@ class GridSheet {
     };
   }
 
-  GridSheet copyWith({
-    String? name,
-    List<List<Color?>>? cells,
-  }) {
+  GridSheet copyWith({String? name, List<List<Color?>>? cells}) {
     return GridSheet(
       name: name ?? this.name,
       cells: cells ?? _cloneCells(this.cells),

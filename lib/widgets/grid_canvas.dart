@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 
+import '../models/pattern_selection.dart';
 import 'grid_painter.dart';
 
 class GridCanvas extends StatefulWidget {
@@ -11,6 +12,7 @@ class GridCanvas extends StatefulWidget {
     super.key,
     required this.baseSize,
     required this.cells,
+    this.selection,
     required this.cellSize,
     required this.pageMargin,
     required this.zoomLevel,
@@ -18,11 +20,14 @@ class GridCanvas extends StatefulWidget {
     required this.maxZoom,
     required this.onZoomChanged,
     required this.onTapDown,
+    required this.onInteractionEnd,
+    required this.onDragStart,
     required this.onDragUpdate,
   });
 
   final Size baseSize;
   final List<List<Color?>> cells;
+  final PatternSelection? selection;
   final double cellSize;
   final double pageMargin;
   final double zoomLevel;
@@ -30,6 +35,8 @@ class GridCanvas extends StatefulWidget {
   final double maxZoom;
   final ValueChanged<double> onZoomChanged;
   final ValueChanged<Offset> onTapDown;
+  final VoidCallback onInteractionEnd;
+  final ValueChanged<Offset> onDragStart;
   final ValueChanged<Offset> onDragUpdate;
 
   @override
@@ -147,7 +154,9 @@ class _GridCanvasState extends State<GridCanvas> {
                 (details.localPosition / widget.zoomLevel) -
                     Offset(widget.pageMargin, widget.pageMargin),
               ),
-              onPanStart: (details) => widget.onDragUpdate(
+              onTapUp: (_) => widget.onInteractionEnd(),
+              onTapCancel: widget.onInteractionEnd,
+              onPanStart: (details) => widget.onDragStart(
                 (details.localPosition / widget.zoomLevel) -
                     Offset(widget.pageMargin, widget.pageMargin),
               ),
@@ -155,6 +164,7 @@ class _GridCanvasState extends State<GridCanvas> {
                 (details.localPosition / widget.zoomLevel) -
                     Offset(widget.pageMargin, widget.pageMargin),
               ),
+              onPanEnd: (_) => widget.onInteractionEnd(),
               child: CustomPaint(
                 size: childSize,
                 painter: GridPainter(
@@ -162,6 +172,7 @@ class _GridCanvasState extends State<GridCanvas> {
                   cellSize: widget.cellSize,
                   pageMargin: widget.pageMargin,
                   zoomLevel: widget.zoomLevel,
+                  selection: widget.selection,
                 ),
               ),
             ),

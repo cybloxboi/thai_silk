@@ -8,16 +8,11 @@ class GridWorkbook {
     required this.activeSheetIndex,
   });
 
-  factory GridWorkbook.initial({
-    required int columns,
-    required int rows,
-  }) {
+  factory GridWorkbook.initial({required int columns, required int rows}) {
     return GridWorkbook(
       columns: columns,
       rows: rows,
-      sheets: [
-        GridSheet.blank(name: 'Sheet 1', rows: rows, columns: columns),
-      ],
+      sheets: [GridSheet.blank(name: 'Sheet 1', rows: rows, columns: columns)],
       activeSheetIndex: 0,
     );
   }
@@ -31,13 +26,17 @@ class GridWorkbook {
     if (rawSheets is List && rawSheets.isNotEmpty) {
       for (final rawSheet in rawSheets) {
         if (rawSheet is Map<String, dynamic>) {
-          sheets.add(GridSheet.fromJson(rawSheet, rows: rows, columns: columns));
+          sheets.add(
+            GridSheet.fromJson(rawSheet, rows: rows, columns: columns),
+          );
         }
       }
     }
 
     if (sheets.isEmpty) {
-      sheets.add(GridSheet.blank(name: 'Sheet 1', rows: rows, columns: columns));
+      sheets.add(
+        GridSheet.blank(name: 'Sheet 1', rows: rows, columns: columns),
+      );
     }
 
     final activeSheetIndex = (json['activeSheetIndex'] as num?)?.toInt() ?? 0;
@@ -63,7 +62,8 @@ class GridWorkbook {
     List<GridSheet>? sheets,
     int? activeSheetIndex,
   }) {
-    final nextSheets = sheets ?? this.sheets.map((sheet) => sheet.copyWith()).toList();
+    final nextSheets =
+        sheets ?? this.sheets.map((sheet) => sheet.copyWith()).toList();
     final nextActiveSheetIndex = (activeSheetIndex ?? this.activeSheetIndex)
         .clamp(0, nextSheets.length - 1)
         .toInt();
@@ -109,10 +109,7 @@ class GridWorkbook {
         ? (activeSheetIndex - 1).clamp(0, nextSheets.length - 1).toInt()
         : activeSheetIndex;
 
-    return copyWith(
-      sheets: nextSheets,
-      activeSheetIndex: nextActiveSheetIndex,
-    );
+    return copyWith(sheets: nextSheets, activeSheetIndex: nextActiveSheetIndex);
   }
 
   GridWorkbook renameSheet(int index, String name) {

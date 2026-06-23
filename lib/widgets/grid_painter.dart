@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 
+import '../models/pattern_selection.dart';
+
 class GridPainter extends CustomPainter {
   const GridPainter({
     required this.cells,
     required this.cellSize,
     required this.pageMargin,
     required this.zoomLevel,
+    this.selection,
   });
 
   final List<List<Color?>> cells;
   final double cellSize;
   final double pageMargin;
   final double zoomLevel;
+  final PatternSelection? selection;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -83,6 +87,30 @@ class GridPainter extends CustomPainter {
           rowPaint,
         );
       }
+    }
+
+    final normalizedSelection = selection?.normalized();
+    if (normalizedSelection != null) {
+      final selectionRect = Rect.fromLTWH(
+        gridOrigin.dx + normalizedSelection.startColumn * scaledCellSize,
+        gridOrigin.dy + normalizedSelection.startRow * scaledCellSize,
+        normalizedSelection.width * scaledCellSize,
+        normalizedSelection.height * scaledCellSize,
+      );
+
+      final selectionFillPaint = Paint()
+        ..color = const Color(0x330F766E)
+        ..style = PaintingStyle.fill;
+      canvas.drawRect(selectionRect, selectionFillPaint);
+
+      final selectionBorderPaint = Paint()
+        ..color = const Color(0xFF0F766E)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.8 * zoomLevel;
+      canvas.drawRect(
+        selectionRect.deflate(0.9 * zoomLevel),
+        selectionBorderPaint,
+      );
     }
 
     final guidePaint = Paint()

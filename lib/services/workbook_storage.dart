@@ -10,13 +10,11 @@ class WorkbookStorage {
   static const String fileLabel = 'Thai Silk project';
 
   static final List<XTypeGroup> _acceptedTypeGroups = [
-    XTypeGroup(
-      label: fileLabel,
-      extensions: const [fileExtension],
-    ),
+    XTypeGroup(label: fileLabel, extensions: const [fileExtension]),
   ];
 
-  static Future<({GridWorkbook workbook, String? path})?> loadFromPickedFile() async {
+  static Future<({GridWorkbook workbook, String? path})?>
+  loadFromPickedFile() async {
     final file = await openFile(acceptedTypeGroups: _acceptedTypeGroups);
     if (file == null) {
       return null;
@@ -31,9 +29,7 @@ class WorkbookStorage {
     return (workbook: GridWorkbook.fromJson(payload), path: file.path);
   }
 
-  static Future<String?> pickSavePath({
-    String? suggestedFileName,
-  }) {
+  static Future<String?> pickSavePath({String? suggestedFileName}) {
     return getSaveLocation(
       acceptedTypeGroups: _acceptedTypeGroups,
       suggestedName: suggestedFileName ?? 'thai_silk.$fileExtension',
@@ -52,7 +48,8 @@ class WorkbookStorage {
     required GridWorkbook workbook,
     String? currentPath,
   }) async {
-    final path = currentPath ??
+    final path =
+        currentPath ??
         await pickSavePath(suggestedFileName: 'thai_silk.$fileExtension');
     if (path == null) {
       throw const FileSystemException('ผู้ใช้ยกเลิกการบันทึก');
