@@ -1,9 +1,29 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/grid_workbook.dart';
+import 'file_saver.dart';
+
+class LoadedWorkbook {
+  const LoadedWorkbook({
+    required this.workbook,
+    required this.name,
+    this.path,
+  });
+
+  final GridWorkbook workbook;
+  final String name;
+  final String? path;
+}
+
+class SavedWorkbook {
+  const SavedWorkbook({required this.name, this.path});
+
+  final String name;
+  final String? path;
+}
 
 class WorkbookStorage {
   static const String fileExtension = 'thsilk';
@@ -13,8 +33,7 @@ class WorkbookStorage {
     XTypeGroup(label: fileLabel, extensions: const [fileExtension]),
   ];
 
-  static Future<({GridWorkbook workbook, String? path})?>
-  loadFromPickedFile() async {
+  static Future<LoadedWorkbook?> loadFromPickedFile() async {
     final file = await openFile(acceptedTypeGroups: _acceptedTypeGroups);
     if (file == null) {
       return null;
@@ -26,38 +45,64 @@ class WorkbookStorage {
       throw const FormatException('ไฟล์โปรเจกต์ไม่ถูกต้อง');
     }
 
-    return (workbook: GridWorkbook.fromJson(payload), path: file.path);
+    final filePath = file.path.trim().isEmpty ? null : file.path;
+    return LoadedWorkbook(
+      workbook: GridWorkbook.fromJson(payload),
+      name: file.name.isNotEmpty
+          ? file.name
+          : _basenameFromPath(filePath) ?? defaultFileName(DateTime.now()),
+      path: filePath,
+    );
   }
 
-  static Future<String?> pickSavePath({String? suggestedFileName}) {
+  static Future<String?> pickSavePath({String? suggestedFileName}) async {
+    if (kIsWeb) {
+      return null;
+    }
+
     return getSaveLocation(
       acceptedTypeGroups: _acceptedTypeGroups,
-      suggestedName: suggestedFileName ?? 'thai_silk.$fileExtension',
+      suggestedName: suggestedFileName ?? defaultFileName(DateTime.now()),
     ).then((location) => location?.path);
   }
 
-  static Future<void> saveToPath({
-    required String path,
-    required GridWorkbook workbook,
-  }) async {
-    final file = File(_ensureExtension(path));
-    await file.writeAsBytes(utf8.encode(jsonEncode(workbook.toJson())));
-  }
-
-  static Future<String> writeToSelectedPath({
+  static Future<SavedWorkbook> saveWorkbook({
     required GridWorkbook workbook,
     String? currentPath,
+    String? suggestedFileName,
   }) async {
-    final path =
-        currentPath ??
-        await pickSavePath(suggestedFileName: 'thai_silk.$fileExtension');
+    final fileName =
+        _ensureExtension(suggestedFileName ?? defaultFileName(DateTime.now()));
+    final bytes = Uint8List.fromList(
+      utf8.encode(jsonEncode(workbook.toJson())),
+    );
+
+    if (kIsWeb) {
+      await saveBytesToDestination(
+        bytes: bytes,
+        destination: fileName,
+        fileName: fileName,
+        mimeType: 'application/json',
+      );
+      return SavedWorkbook(name: fileName);
+    }
+
+    final path = currentPath ?? await pickSavePath(suggestedFileName: fileName);
     if (path == null) {
-      throw const FileSystemException('ผู้ใช้ยกเลิกการบันทึก');
+      throw Exception('ผู้ใช้ยกเลิกการบันทึก');
     }
 
     final resolvedPath = _ensureExtension(path);
-    await saveToPath(path: resolvedPath, workbook: workbook);
-    return resolvedPath;
+    await saveBytesToDestination(
+      bytes: bytes,
+      destination: resolvedPath,
+      fileName: fileName,
+      mimeType: 'application/json',
+    );
+    return SavedWorkbook(
+      path: resolvedPath,
+      name: _basenameFromPath(resolvedPath) ?? fileName,
+    );
   }
 
   static String defaultFileName(DateTime now) {
@@ -71,5 +116,14 @@ class WorkbookStorage {
     }
 
     return '$path.$fileExtension';
+  }
+
+  static String? _basenameFromPath(String? path) {
+    if (path == null || path.trim().isEmpty) {
+      return null;
+    }
+
+    final segments = path.split(RegExp(r'[\\/]'));
+    return segments.isEmpty ? null : segments.last;
   }
 }

@@ -1,16 +1,21 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:printing/printing.dart';
 
 import '../models/grid_sheet.dart';
 import '../models/grid_workbook.dart';
 import '../models/pattern_selection.dart';
+import '../models/ph_color_swatch.dart';
 import '../services/grid_pdf_exporter.dart';
 import '../services/pattern_repeat_service.dart';
+import '../services/pixel_image_service.dart';
 import '../services/workbook_storage.dart';
 import '../widgets/control_panel.dart';
+import '../widgets/color_picker_dialog.dart';
+import '../widgets/ph_color_info_dialog.dart';
+import '../widgets/pdf_export_dialog.dart';
+import '../widgets/pixel_image_import_dialog.dart';
 import '../widgets/grid_canvas.dart';
 import '../widgets/paper_shell.dart';
 
@@ -40,6 +45,298 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
     Color(0xFFEAB308),
   ];
 
+  static const List<PhColorSwatch> phPalette = [
+    PhColorSwatch(
+      label: 'pH2.5',
+      color: Color(0xFFB4261D),
+      rgb: '180, 38, 29',
+      hsv: '3.6°, 0.839, 0.706',
+      lab: '41.39, 52.50, 41.81',
+      hex: '#B4261D',
+      requirements: [
+        'น้ำครั่ง 300 ml',
+        'น้ำมะขามเปียก 260 ml',
+        'สารส้มช่วยติดสี 0.5 g',
+      ],
+      steps: [
+        'แช่ไหมในน้ำเปล่า 500 ml เวลา 10 นาที',
+        'ตั้งไฟอุ่นน้ำครั่งให้อุณหภูมิ 50°C',
+        'ปรับ pH น้ำครั่งตามส่วนผวม',
+        'วัด pH ในหม้อ : pH 2.5',
+        'แช่ไหมในน้ำครั่ง 300 ml ขยี้ บิด ๆ 5 นาที',
+        'บิดไหมให้หมาด ๆ',
+        'ต้มไหมในน้ำเดิมเวลา 30 นาที',
+        'หลังต้ม บิดให้หมาด ๆ',
+        'วัด pH น้ำหลังต้ม : pH 2.4',
+        'ตากไว้ในอาคารโล่ง 1 วัน',
+        'ต้มน้ำเปล่า 1 L อุณหภูมิ 50 °C',
+        'ล้างไหมในอุณหภูมิ 50°C 1 นาที',
+        'ล้างในน้ำธรรมดา 500 ml อีก 5 น้ำ',
+        'บิดให้หมาดแล้วนำไปตาก 1 วัน จะได้ไหม',
+      ],
+    ),
+    PhColorSwatch(
+      label: 'pH3',
+      color: Color(0xFF9A120F),
+      rgb: '154, 18, 15',
+      hsv: '1.3°, 0.903, 0.604',
+      lab: '33.49, 50.35, 39.33',
+      hex: '#9A120F',
+      requirements: [
+        'น้ำครั่ง 300 ml',
+        'น้ำมะขามเปียก 88 ml',
+        'สารส้มช่วยติดสี 0.5 g',
+      ],
+      steps: [
+        'แช่ไหมในน้ำเปล่า 500 ml เวลา 10 นาที',
+        'ตั้งไฟอุ่นน้ำครั่งให้อุณหภูมิ 50°C',
+        'ปรับ pH น้ำครั่งตามส่วนผสม',
+        'วัด pH ในหม้อ : pH 3',
+        'แช่ไหมในน้ำครั่ง 300 ml ขยี้ บิด ๆ 5 นาที',
+        'บิดไหมให้หมาด ๆ ',
+        'ต้มไหมในน้ำเดิม เวลา 30 นาที',
+        'หลังต้ม บิดให้หมาด ๆ',
+        'วัด pH น้ำหลังต้ม : pH 2.5',
+        'ตากไว้ในอาคารโล่ง 1 วัน',
+        'ต้มน้ำเปล่า 1 L อุณหภูมิ 50°C',
+        'ล้างไหมในน้ำอุณหภูมิ 50°C 1 นาท',
+        'ล้างในน้ำธรรมดา 500 ml อีก 5 น้ำ',
+        'บิดให้หมาด แล้วนำไปตาก 1 วัน จะได้ไหม',
+      ],
+    ),
+    PhColorSwatch(
+      label: 'pH3.5',
+      color: Color(0xFFB41320),
+      rgb: '180, 19, 32',
+      hsv: '355.2°, 0.894, 0.706',
+      lab: '39.46, 57.32, 38.84',
+      hex: '#B41320',
+      requirements: [
+        'น้ำครั่ง 300 ml',
+        'น้ำมะขามเปียก 35 ml',
+        'สารส้มช่วยติดสี 0.5 g',
+      ],
+      steps: [
+        'แช่ไหมในน้ำเปล่า 500 ml เวลา 10 นาที',
+        'ตั้งไฟอุ่นน้ำครั่งให้อุณหภูมิ 50°C',
+        'ปรับ pH น้ำครั่งตามส่วนผสม',
+        'วัด pH ในหม้อ : pH 3.5',
+        'แช่ไหมในน้ำครั่ง 300 ml ขยี้ บิด ๆ 5 นาที',
+        'บิดไหมให้หมาด ๆ',
+        'ต้มไหมในน้ำเดิม 30 นาที',
+        'หลังต้ม บิดให้หมาด ๆ',
+        'วัด pH น้ำหลังต้ม : pH 2.7',
+        'ตากไว้ในอาคารโล่ง 1 วัน',
+        'ต้มน้ำเปล่า 1 L อุณหภูมิ 50°C',
+        'ล้างไหมในน้ำอุณหูมิ 50°C 1 นาที',
+        'ล้างในน้ำธรรมดา 500 ml อีก 5 น้ำ',
+        'บิดให้หมาด แล้วนำไปตาก 1 วัน จะได้ไหม',
+      ],
+    ),
+    PhColorSwatch(
+      label: 'pH4',
+      color: Color(0xFF90141A),
+      rgb: '144, 20, 26',
+      hsv: '357.1°, 0.861, 0.565',
+      lab: '31.85, 46.78, 31.87',
+      hex: '#90141A',
+      requirements: [
+        'น้ำครั่ง 300 ml',
+        'น้ำมะขามเปียก 20 ml',
+        'สารส้มช่วยติดสี 0.5 g',
+      ],
+      steps: [
+        'แช่ไหมในน้ำเปล่า 500 ml เวลา 10 นาที',
+        'ตั้งไฟอุ่นน้ำครั่งให้อุณหภูมิ 50°C',
+        'ปรับ pH น้ำครั่งตามส่วนผสม',
+        'วัด pH ในหม้อ : pH 4',
+        'แช่ไหมในน้ำครั่ง 300 ml ขยี้ บิด ๆ 5 นาที',
+        'บิดไหมให้หมาด ๆ',
+        'ต้มไหมในน้ำเดิม 30 นาที',
+        'หลังต้ม บิดให้หมาด ๆ',
+        'วัด pH น้ำหลังต้ม : pH 3.2',
+        'ตากไว้ในอาคารโล่ง 1 วัน',
+        'ต้มน้ำเปล่า 1 L อุณหภูมิ 50°C',
+        'ล้างไหมในน้ำอุณหูมิ 50°C 1 นาที',
+        'ล้างในน้ำธรรมดา 500 ml อีก 5 น้ำ',
+        'บิดให้หมาด แล้วนำไปตาก 1 วัน จะได้ไหม',
+      ],
+    ),
+    PhColorSwatch(
+      label: 'pH4.5',
+      color: Color(0xFF7B0A12),
+      rgb: '123, 10, 18',
+      hsv: '355.8°, 0.919, 0.482',
+      lab: '25.77, 43.60, 28.19',
+      hex: '#7B0A12',
+      requirements: [
+        'น้ำครั่ง 300 ml',
+        'น้ำมะขามเปียก 12 ml',
+        'สารส้มช่วยติดสี 0.5 g',
+      ],
+      steps: [
+        'แช่ไหมในน้ำเปล่า 500 ml เวลา 10 นาที',
+        'ตั้งไฟอุ่นน้ำครั่งให้อุณหภูมิ 50°C',
+        'ปรับ pH น้ำครั่งตามส่วนผวม',
+        'วัด pH ในหม้อ : pH 4.5',
+        'แช่ไหมในน้ำครั่ง 300 ml ขยี้ บิด ๆ 5 นาที',
+        'บิดไหมให้หมาด ๆ',
+        'ต้มไหมในน้ำเดิมเวลา 30 นาที',
+        'หลังต้ม บิดให้หมาด ๆ',
+        'วัด pH น้ำหลังต้ม : pH 3.5',
+        'ตากไว้ในอาคารโล่ง 1 วัน',
+        'ต้มน้ำเปล่า 1 L อุณหภูมิ 50 °C',
+        'ล้างไหมในอุณหภูมิ 50°C 1 นาที',
+        'ล้างในน้ำธรรมดา 500 ml อีก 5 น้ำ',
+        'บิดให้หมาดแล้วนำไปตาก 1 วัน จะได้ไหม',
+      ],
+    ),
+    PhColorSwatch(
+      label: 'pH5',
+      color: Color(0xFF8F2231),
+      rgb: '143, 34, 49',
+      hsv: '351.7°, 0.762, 0.561',
+      lab: '34.63, 42.35, 22.80',
+      hex: '#8F2231',
+      requirements: [
+        'น้ำครั่ง 300 ml',
+        'น้ำมะขามเปียก 4 ml',
+        'สารส้มช่วยติดสี 0.5 g',
+      ],
+      steps: [
+        'แช่ไหมในน้ำเปล่า 500 ml เวลา 10 นาที',
+        'ตั้งไฟอุ่นน้ำครั่งให้อุณหภูมิ 50°C',
+        'ปรับ pH น้ำครั่งตามส่วนผสม',
+        'วัด pH ในหม้อ : pH 5',
+        'แช่ไหมในน้ำครั่ง 300 ml ขยี้ บิด ๆ 5 นาที',
+        'บิดไหมให้หมาด ๆ',
+        'ต้มไหมในน้ำเดิม 30 นาที',
+        'หลังต้ม บิดให้หมาด ๆ',
+        'วัด pH น้ำหลังต้ม : pH 3.9',
+        'ตากไว้ในอาคารโล่ง 1 วัน',
+        'ต้มน้ำเปล่า 1 L อุณหภูมิ 50°C',
+        'ล้างไหมในน้ำอุณหูมิ 50°C 1 นาที',
+        'ล้างในน้ำธรรมดา 500 ml อีก 5 น้ำ',
+        'บิดให้หมาด แล้วนำไปตาก 1 วัน จะได้ไหม',
+      ],
+    ),
+    PhColorSwatch(
+      label: 'pH5.5',
+      color: Color(0xFF83242D),
+      rgb: '131, 36, 45',
+      hsv: '354.3°, 0.725, 0.514',
+      lab: '30.47, 39.66, 18.90',
+      hex: '#83242D',
+      requirements: [
+        'น้ำครั่ง 300 ml',
+        'สารส้มช่วยติดสี 0.5 g',
+      ],
+      steps: [
+        'แช่ไหมในน้ำเปล่า 500 ml เวลา 10 นาที',
+        'ตั้งไฟอุ่นน้ำครั่งให้อุณหภูมิ 50°C',
+        'ปรับ pH น้ำครั่งตามส่วนผวม',
+        'วัด pH ในหม้อ : pH 5.5',
+        'แช่ไหมในน้ำครั่ง 300 ml ขยี้ บิด ๆ 5 นาที',
+        'บิดไหมให้หมาด ๆ',
+        'ต้มไหมในน้ำเดิมเวลา 30 นาที',
+        'หลังต้ม บิดให้หมาด ๆ',
+        'วัด pH น้ำหลังต้ม : pH 4.4',
+        'ตากไว้ในอาคารโล่ง 1 วัน',
+        'ต้มน้ำเปล่า 1 L อุณหภูมิ 50 °C',
+        'ล้างไหมในอุณหภูมิ 50°C 1 นาที',
+        'ล้างในน้ำธรรมดา 500 ml อีก 5 น้ำ',
+        'บิดให้หมาดแล้วนำไปตาก 1 วัน จะได้ไหม',
+      ],
+    ),
+    PhColorSwatch(
+      label: 'pH6',
+      color: Color(0xFFBE5955),
+      rgb: '190, 89, 85',
+      hsv: '2.3°, 0.553, 0.745',
+      lab: '51.02, 39.33, 23.49',
+      hex: '#BE5955',
+      requirements: [
+        'น้ำครั่ง 300 ml',
+        'น้ำเถ้า 4 ml',
+        'สารส้มช่วยติดสี 0.5 g',
+      ],
+      steps: [
+        'แช่ไหมในน้ำเปล่า 500 ml เวลา 10 นาที',
+        'ตั้งไฟอุ่นน้ำครั่งให้อุณหภูมิ 50°C',
+        'ปรับ pH น้ำครั่งตามส่วนผสม',
+        'วัด pH ในหม้อ : pH 6',
+        'แช่ไหมในน้ำครั่ง 300 ml ขยี้ บิด ๆ 5 นาที',
+        'บิดไหมให้หมาด ๆ',
+        'ต้มไหมในน้ำเดิม 30 นาที',
+        'หลังต้ม บิดให้หมาด ๆ',
+        'วัด pH น้ำหลังต้ม : pH 4.7',
+        'ตากไว้ในอาคารโล่ง 1 วัน',
+        'ต้มน้ำเปล่า 1 L อุณหภูมิ 50°C',
+        'ล้างไหมในน้ำอุณหูมิ 50°C 1 นาที',
+        'ล้างในน้ำธรรมดา 500 ml อีก 5 น้ำ',
+        'บิดให้หมาด แล้วนำไปตาก 1 วัน จะได้ไหม',
+      ],
+    ),
+    PhColorSwatch(
+      label: 'pH6.5',
+      color: Color(0xFFC06759),
+      rgb: '192, 103, 89',
+      hsv: '8.2°, 0.536, 0.753',
+      lab: '54.08, 33.98, 24.69',
+      hex: '#C06759',
+      requirements: [
+        'น้ำครั่ง 300 ml',
+        'น้ำเถ้า 9 ml',
+        'สารส้มช่วยติดสี 0.5 g',
+      ],
+      steps: [
+        'แช่ไหมในน้ำเปล่า 500 ml เวลา 10 นาที',
+        'ตั้งไฟอุ่นน้ำครั่งให้อุณหภูมิ 50°C',
+        'ปรับ pH น้ำครั่งตามส่วนผวม',
+        'วัด pH ในหม้อ : pH 6.5',
+        'แช่ไหมในน้ำครั่ง 300 ml ขยี้ บิด ๆ 5 นาที',
+        'บิดไหมให้หมาด ๆ',
+        'ต้มไหมในน้ำเดิมเวลา 30 นาที',
+        'หลังต้ม บิดให้หมาด ๆ',
+        'วัด pH น้ำหลังต้ม : pH 5.2',
+        'ตากไว้ในอาคารโล่ง 1 วัน',
+        'ต้มน้ำเปล่า 1 L อุณหภูมิ 50 °C',
+        'ล้างไหมในอุณหภูมิ 50°C 1 นาที',
+        'ล้างในน้ำธรรมดา 500 ml อีก 5 น้ำ',
+        'บิดให้หมาดแล้วนำไปตาก 1 วัน จะได้ไหม',
+      ],
+    ),
+    PhColorSwatch(
+      label: 'pH7',
+      color: Color(0xFFD48064),
+      rgb: '212, 128, 100',
+      hsv: '15.0°, 0.528, 0.831',
+      lab: '62.36, 29.57, 29.58',
+      hex: '#D48064',
+      requirements: [
+        'น้ำครั่ง 300 ml',
+        'น้ำเถ้า 15 ml',
+        'สารส้มช่วยติดสี 0.5 g',
+      ],
+      steps: [
+        'แช่ไหมในน้ำเปล่า 500 ml เวลา 10 นาที',
+        'ตั้งไฟอุ่นน้ำครั่งให้อุณหภูมิ 50°C',
+        'ปรับ pH น้ำครั่งตามส่วนผสม',
+        'วัด pH ในหม้อ : pH 7',
+        'แช่ไหมในน้ำครั่ง 300 ml ขยี้ บิด ๆ 5 นาที',
+        'บิดไหมให้หมาด ๆ',
+        'ต้มไหมในน้ำเดิม 30 นาที',
+        'หลังต้ม บิดให้หมาด ๆ',
+        'วัด pH น้ำหลังต้ม : pH 5.6',
+        'ตากไว้ในอาคารโล่ง 1 วัน',
+        'ต้มน้ำเปล่า 1 L อุณหภูมิ 50°C',
+        'ล้างไหมในน้ำอุณหูมิ 50°C 1 นาที',
+        'ล้างในน้ำธรรมดา 500 ml อีก 5 น้ำ',
+        'บิดให้หมาด แล้วนำไปตาก 1 วัน จะได้ไหม',
+      ],
+    ),
+  ];
+
   GridWorkbook workbook = GridWorkbook.initial(
     columns: defaultColumns,
     rows: defaultRows,
@@ -50,6 +347,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
   double zoomLevel = 1.0;
   bool exportingPdf = false;
   String? currentFilePath;
+  String? currentFileName;
   PatternSelection? patternSelection;
   int horizontalRepeatSpacing = 0;
   int verticalRepeatSpacing = 0;
@@ -66,18 +364,43 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
   );
 
   String get currentFileLabel {
+    if (currentFileName != null && currentFileName!.trim().isNotEmpty) {
+      return currentFileName!;
+    }
+
+    final fromPath = _basenameFromPath(currentFilePath);
+    if (fromPath != null) {
+      return fromPath;
+    }
+
     if (currentFilePath == null || currentFilePath!.trim().isEmpty) {
       return 'ยังไม่บันทึก';
     }
 
-    return currentFilePath!.split(Platform.pathSeparator).last;
+    return currentFilePath!;
   }
 
-  void _applyWorkbook(GridWorkbook nextWorkbook, {String? filePath}) {
+  String? _basenameFromPath(String? path) {
+    if (path == null || path.trim().isEmpty) {
+      return null;
+    }
+
+    final segments = path.split(RegExp(r'[\\/]'));
+    return segments.isEmpty ? null : segments.last;
+  }
+
+  void _applyWorkbook(
+    GridWorkbook nextWorkbook, {
+    String? filePath,
+    String? fileName,
+  }) {
     setState(() {
       workbook = nextWorkbook;
       if (filePath != null) {
         currentFilePath = filePath;
+      }
+      if (fileName != null) {
+        currentFileName = fileName;
       }
     });
   }
@@ -85,6 +408,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
   void _applyWorkbookChange(
     GridWorkbook nextWorkbook, {
     String? filePath,
+    String? fileName,
     bool recordHistory = true,
     bool clearHistory = false,
   }) {
@@ -100,6 +424,9 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       workbook = nextWorkbook;
       if (filePath != null) {
         currentFilePath = filePath;
+      }
+      if (fileName != null) {
+        currentFileName = fileName;
       }
     });
   }
@@ -237,20 +564,30 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
   }
 
   String _makeUniqueSheetName(String baseName) {
+    final trimmedBaseName = baseName.trim();
     final existingNames = workbook.sheets.map((sheet) => sheet.name).toSet();
-    if (!existingNames.contains(baseName)) {
-      return baseName;
+    if (!existingNames.contains(trimmedBaseName)) {
+      return trimmedBaseName;
     }
 
     var suffix = 2;
-    while (existingNames.contains('$baseName $suffix')) {
+    while (existingNames.contains('$trimmedBaseName $suffix')) {
       suffix++;
     }
-    return '$baseName $suffix';
+    return '$trimmedBaseName $suffix';
+  }
+
+  String _nextSheetName() {
+    final existingNames = workbook.sheets.map((sheet) => sheet.name).toSet();
+    var suffix = 1;
+    while (existingNames.contains('Sheet $suffix')) {
+      suffix++;
+    }
+    return 'Sheet $suffix';
   }
 
   void _addSheet() {
-    final sheetName = _makeUniqueSheetName('Sheet');
+    final sheetName = _nextSheetName();
     final nextWorkbook = workbook.addSheet(
       GridSheet.blank(
         name: sheetName,
@@ -347,10 +684,12 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       _applyWorkbookChange(
         loaded.workbook,
         filePath: loaded.path,
+        fileName: loaded.name,
         recordHistory: false,
         clearHistory: true,
       );
       setState(() {
+        currentFileName = loaded.name;
         patternSelection = null;
         patternSelectionMode = false;
         _historyRecordedForGesture = false;
@@ -372,30 +711,152 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
     }
   }
 
-  Future<void> _saveFile({bool saveAs = false}) async {
-    try {
-      final path = saveAs
-          ? await WorkbookStorage.writeToSelectedPath(
-              workbook: workbook,
-              currentPath: null,
-            )
-          : await WorkbookStorage.writeToSelectedPath(
-              workbook: workbook,
-              currentPath: currentFilePath,
-            );
+  Future<void> _pickCustomColor() async {
+    final pickedColor = await showDialog<Color?>(
+      context: context,
+      builder: (dialogContext) {
+        return ColorPickerDialog(
+          initialColor: selectedColor ?? const Color(0xFF0F766E),
+        );
+      },
+    );
 
-      _applyWorkbook(workbook, filePath: path);
+    if (pickedColor == null) {
+      return;
+    }
+
+    _selectColor(pickedColor);
+  }
+
+  void _pickPhColor(PhColorSwatch swatch) {
+    _selectColor(swatch.color);
+  }
+
+  Future<void> _openPhColorHelp() async {
+    final initialIndex = phPalette.indexWhere(
+      (swatch) => selectedColor == swatch.color,
+    );
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return PhColorHelpDialog(
+          swatches: phPalette,
+          initialIndex: initialIndex < 0 ? 0 : initialIndex,
+        );
+      },
+    );
+  }
+
+  Future<void> _importPixelImage() async {
+    try {
+      final file = await openFile(
+        acceptedTypeGroups: [
+          const XTypeGroup(
+            label: 'Images',
+            extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'],
+          ),
+        ],
+      );
+      if (file == null) {
+        return;
+      }
+
       if (!mounted) {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'บันทึกไฟล์ ${path.split(Platform.pathSeparator).last} แล้ว',
-          ),
-        ),
+      final importSettings = await showDialog<PixelImageImportSettings>(
+        context: context,
+        builder: (dialogContext) {
+          return PixelImageImportDialog(
+            maxColumns: workbook.columns,
+            maxRows: workbook.rows,
+          );
+        },
       );
+      if (importSettings == null) {
+        return;
+      }
+
+      final targetColumns = importSettings.mode == PixelImageImportMode.full
+          ? workbook.columns
+          : importSettings.columns;
+      final targetRows = importSettings.mode == PixelImageImportMode.full
+          ? workbook.rows
+          : importSettings.rows;
+
+      final imageBytes = await file.readAsBytes();
+      final importedCells = await PixelImageService.buildPixelGrid(
+        imageBytes: imageBytes,
+        columns: targetColumns,
+        rows: targetRows,
+      );
+      final nextSheet = GridSheet.blank(
+        name: activeSheet.name,
+        rows: workbook.rows,
+        columns: workbook.columns,
+      );
+      for (
+        var row = 0;
+        row < importedCells.length && row < workbook.rows;
+        row++
+      ) {
+        final importedRow = importedCells[row];
+        for (
+          var column = 0;
+          column < importedRow.length && column < workbook.columns;
+          column++
+        ) {
+          nextSheet.cells[row][column] = importedRow[column];
+        }
+      }
+      _applyWorkbookChange(
+        workbook.replaceSheet(workbook.activeSheetIndex, nextSheet),
+      );
+      setState(() {
+        patternSelection = null;
+        patternSelectionMode = false;
+        _historyRecordedForGesture = false;
+      });
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('นำเข้ารูปภาพ ${file.name} แล้ว')));
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('นำเข้ารูปภาพไม่สำเร็จ: $error')));
+    }
+  }
+
+  Future<void> _saveFile({bool saveAs = false}) async {
+    try {
+      final saved = await WorkbookStorage.saveWorkbook(
+        workbook: workbook,
+        currentPath: saveAs ? null : currentFilePath,
+        suggestedFileName:
+            currentFileName ?? WorkbookStorage.defaultFileName(DateTime.now()),
+      );
+
+      _applyWorkbook(
+        workbook,
+        filePath: saved.path,
+        fileName: saved.name,
+      );
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('บันทึกไฟล์ ${saved.name} แล้ว')));
     } catch (error) {
       if (!mounted) {
         return;
@@ -411,17 +872,47 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       return;
     }
 
+    final exportSettings = await showDialog<PdfExportSettings>(
+      context: context,
+      builder: (dialogContext) {
+        return PdfExportDialog(
+          sheetNames: workbook.sheets.map((sheet) => sheet.name).toList(),
+          initialSheetIndex: workbook.activeSheetIndex,
+        );
+      },
+    );
+    if (exportSettings == null) {
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+
+    final sheetsToExport = switch (exportSettings.mode) {
+      PdfExportMode.currentSheet => <GridSheet>[
+        workbook.sheets[workbook.activeSheetIndex],
+      ],
+      PdfExportMode.chooseSheet =>
+        exportSettings.sheetIndices
+            .map((index) => workbook.sheets[index])
+            .toList(),
+      PdfExportMode.allSheets => workbook.sheets,
+    };
+
     setState(() {
       exportingPdf = true;
     });
 
     try {
       final bytes = await GridPdfExporter.build(
-        cells: activeSheet.cells,
+        sheets: sheetsToExport,
         columns: workbook.columns,
         rows: workbook.rows,
       );
-      await Printing.sharePdf(bytes: bytes, filename: 'thai_silk_grid.pdf');
+      final fileName = exportSettings.mode == PdfExportMode.allSheets
+          ? 'thai_silk_all_sheets.pdf'
+          : 'thai_silk_grid.pdf';
+      await Printing.sharePdf(bytes: bytes, filename: fileName);
     } catch (error) {
       if (!mounted) {
         return;
@@ -693,6 +1184,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
                   final controls = ControlsPanel(
                     theme: theme,
                     palette: palette,
+                    phPalette: phPalette,
                     selectedColor: selectedColor,
                     eraseMode: eraseMode,
                     filledCount: filledCount,
@@ -700,10 +1192,14 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
                     activeSheetName: activeSheet.name,
                     currentFileLabel: currentFileLabel,
                     onPickColor: (color) => _selectColor(color),
+                    onPickPhColor: _pickPhColor,
+                    onOpenPhHelp: _openPhColorHelp,
+                    onPickCustomColor: _pickCustomColor,
                     onPickEraser: () => _selectColor(null, erase: true),
                     onClearAll: _clearAll,
                     onExportPdf: _exportPdf,
                     onOpenFile: _openFile,
+                    onImportPixelImage: _importPixelImage,
                     onSaveFile: () => _saveFile(),
                     onSaveFileAs: () => _saveFile(saveAs: true),
                     onAddSheet: _addSheet,

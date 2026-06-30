@@ -7,12 +7,16 @@ class ColorChip extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.isEraser = false,
+    this.diameter = 44,
+    this.showSelectionCheck = true,
   });
 
   final Color color;
   final bool selected;
   final VoidCallback onTap;
   final bool isEraser;
+  final double diameter;
+  final bool showSelectionCheck;
 
   @override
   Widget build(BuildContext context) {
@@ -25,8 +29,8 @@ class ColorChip extends StatelessWidget {
       borderRadius: BorderRadius.circular(999),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
-        width: 44,
-        height: 44,
+        width: diameter,
+        height: diameter,
         decoration: BoxDecoration(
           color: isEraser ? const Color(0xFFF7F2E8) : color,
           shape: BoxShape.circle,
@@ -39,9 +43,31 @@ class ColorChip extends StatelessWidget {
             ),
           ],
         ),
-        child: isEraser
-            ? const Icon(Icons.delete_outline_rounded, color: Color(0xFF374151))
-            : null,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            if (isEraser)
+              const Icon(Icons.delete_outline_rounded, color: Color(0xFF374151)),
+            if (selected && showSelectionCheck)
+              Positioned(
+                right: diameter * 0.06,
+                top: diameter * 0.06,
+                child: Container(
+                  width: diameter * 0.32,
+                  height: diameter * 0.32,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF0F766E),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    size: 12,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

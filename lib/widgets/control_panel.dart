@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../models/pattern_selection.dart';
+import '../models/ph_color_swatch.dart';
 import 'color_chip.dart';
 import 'info_tile.dart';
 
@@ -17,10 +18,15 @@ class ControlsPanel extends StatefulWidget {
     required this.activeSheetName,
     required this.currentFileLabel,
     required this.onPickColor,
+    required this.phPalette,
+    required this.onPickPhColor,
+    required this.onOpenPhHelp,
+    required this.onPickCustomColor,
     required this.onPickEraser,
     required this.onClearAll,
     required this.onExportPdf,
     required this.onOpenFile,
+    required this.onImportPixelImage,
     required this.onSaveFile,
     required this.onSaveFileAs,
     required this.onAddSheet,
@@ -56,6 +62,7 @@ class ControlsPanel extends StatefulWidget {
 
   final ThemeData theme;
   final List<Color> palette;
+  final List<PhColorSwatch> phPalette;
   final Color? selectedColor;
   final bool eraseMode;
   final int filledCount;
@@ -66,10 +73,14 @@ class ControlsPanel extends StatefulWidget {
   final int rows;
   final double zoomLevel;
   final ValueChanged<Color> onPickColor;
+  final ValueChanged<PhColorSwatch> onPickPhColor;
+  final VoidCallback onOpenPhHelp;
+  final VoidCallback onPickCustomColor;
   final VoidCallback onPickEraser;
   final VoidCallback onClearAll;
   final VoidCallback onExportPdf;
   final VoidCallback onOpenFile;
+  final VoidCallback onImportPixelImage;
   final VoidCallback onSaveFile;
   final VoidCallback onSaveFileAs;
   final VoidCallback onAddSheet;
@@ -280,6 +291,11 @@ class _ControlsPanelState extends State<ControlsPanel> {
                     icon: const Icon(Icons.folder_open_outlined),
                     label: const Text('เปิดไฟล์'),
                   ),
+                  FilledButton.tonalIcon(
+                    onPressed: widget.onImportPixelImage,
+                    icon: const Icon(Icons.image_outlined),
+                    label: const Text('นำเข้ารูปภาพ'),
+                  ),
                   FilledButton.icon(
                     onPressed: widget.onSaveFile,
                     icon: const Icon(Icons.save_outlined),
@@ -316,7 +332,7 @@ class _ControlsPanelState extends State<ControlsPanel> {
               ),
               const SizedBox(height: 14),
               Text(
-                'สี',
+                'พาเลตสี',
                 style: widget.theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -326,19 +342,88 @@ class _ControlsPanelState extends State<ControlsPanel> {
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  for (final color in widget.palette)
-                    ColorChip(
-                      color: color,
-                      selected:
-                          !widget.eraseMode && widget.selectedColor == color,
-                      onTap: () => widget.onPickColor(color),
-                    ),
+                  FilledButton.tonalIcon(
+                    onPressed: widget.onPickCustomColor,
+                    icon: const Icon(Icons.color_lens_outlined),
+                    label: const Text('เลือกสี'),
+                  ),
+                  ColorChip(
+                    color: widget.selectedColor ?? Colors.white,
+                    selected: !widget.eraseMode,
+                    onTap: widget.onPickCustomColor,
+                  ),
                   ColorChip(
                     color: Colors.white,
                     selected: widget.eraseMode,
                     onTap: widget.onPickEraser,
                     isEraser: true,
+                    showSelectionCheck: false,
                   ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  for (final color in widget.palette)
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ColorChip(
+                          color: color,
+                          selected:
+                              !widget.eraseMode && widget.selectedColor == color,
+                          onTap: () => widget.onPickColor(color),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'สีจากครั่ง',
+                    style: widget.theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  TextButton.icon(
+                    key: const Key('ph_help_button'),
+                    onPressed: widget.onOpenPhHelp,
+                    icon: const Icon(Icons.help_outline),
+                    label: const Text('คำแนะนำการย้อมสี'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  for (final swatch in widget.phPalette)
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ColorChip(
+                          key: ValueKey('ph_chip_${swatch.label}'),
+                          color: swatch.color,
+                          selected: !widget.eraseMode &&
+                              widget.selectedColor == swatch.color,
+                          onTap: () => widget.onPickPhColor(swatch),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          swatch.label,
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF374151),
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
               const SizedBox(height: 16),

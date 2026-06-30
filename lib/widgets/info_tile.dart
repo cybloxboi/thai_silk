@@ -17,9 +17,15 @@ class InfoTile extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        spacing: 16,
         children: [
           Text(label),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
+          Flexible(
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
         ],
       ),
     );

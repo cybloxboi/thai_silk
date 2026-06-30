@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../models/grid_sheet.dart';
+
 class GridPdfExporter {
   static Future<Uint8List> build({
-    required List<List<Color?>> cells,
+    required List<GridSheet> sheets,
     required int columns,
     required int rows,
   }) async {
@@ -36,119 +38,133 @@ class GridPdfExporter {
     final gridLineColor = PdfColor.fromInt(0xFFE4DDD1);
     final borderColor = PdfColor.fromInt(0xFFB8AB95);
 
-    pdf.addPage(
-      pw.Page(
-        pageFormat: pageFormat,
-        margin: pw.EdgeInsets.zero,
-        build: (context) {
-          final children = <pw.Widget>[
-            pw.Positioned.fill(
-              child: pw.Container(color: PdfColor.fromInt(0xFFFFFFFF)),
-            ),
-          ];
-
-          for (var column = 0; column < columns; column++) {
-            children.add(
-              pw.Positioned(
-                left: originX + column * cellSize,
-                top: pageInset,
-                child: pw.SizedBox(
-                  width: cellSize,
-                  height: labelBandTop,
-                  child: pw.Center(
-                    child: pw.Text('${column + 1}', style: labelStyle),
-                  ),
-                ),
+    for (final sheet in sheets) {
+      pdf.addPage(
+        pw.Page(
+          pageFormat: pageFormat,
+          margin: pw.EdgeInsets.zero,
+          build: (context) {
+            final children = <pw.Widget>[
+              pw.Positioned.fill(
+                child: pw.Container(color: PdfColor.fromInt(0xFFFFFFFF)),
               ),
-            );
-          }
-
-          for (var row = 0; row < rows; row++) {
-            children.add(
               pw.Positioned(
                 left: pageInset,
-                top: originY + row * cellSize,
-                child: pw.SizedBox(
-                  width: labelBandLeft,
-                  height: cellSize,
-                  child: pw.Align(
-                    alignment: pw.Alignment.centerRight,
-                    child: pw.Text('${row + 1}', style: labelStyle),
+                top: 6,
+                child: pw.Text(
+                  sheet.name,
+                  style: pw.TextStyle(
+                    color: PdfColor.fromInt(0xFF111827),
+                    fontSize: 10,
+                    fontWeight: pw.FontWeight.bold,
                   ),
                 ),
               ),
-            );
-          }
+            ];
 
-          for (var row = 0; row < rows; row++) {
             for (var column = 0; column < columns; column++) {
-              final cellColor = cells[row][column];
-              if (cellColor == null) {
-                continue;
-              }
-
               children.add(
                 pw.Positioned(
                   left: originX + column * cellSize,
-                  top: originY + row * cellSize,
+                  top: pageInset,
                   child: pw.SizedBox(
                     width: cellSize,
-                    height: cellSize,
-                    child: pw.Container(color: _toPdfColor(cellColor)),
+                    height: labelBandTop,
+                    child: pw.Center(
+                      child: pw.Text('${column + 1}', style: labelStyle),
+                    ),
                   ),
                 ),
               );
             }
-          }
 
-          for (var column = 0; column <= columns; column++) {
-            children.add(
-              pw.Positioned(
-                left: originX + column * cellSize,
-                top: originY,
-                child: pw.SizedBox(
-                  width: 0.6,
-                  height: gridHeight,
-                  child: pw.Container(color: gridLineColor),
+            for (var row = 0; row < rows; row++) {
+              children.add(
+                pw.Positioned(
+                  left: pageInset,
+                  top: originY + row * cellSize,
+                  child: pw.SizedBox(
+                    width: labelBandLeft,
+                    height: cellSize,
+                    child: pw.Align(
+                      alignment: pw.Alignment.centerRight,
+                      child: pw.Text('${row + 1}', style: labelStyle),
+                    ),
+                  ),
                 ),
-              ),
-            );
-          }
+              );
+            }
 
-          for (var row = 0; row <= rows; row++) {
+            for (var row = 0; row < rows; row++) {
+              for (var column = 0; column < columns; column++) {
+                final cellColor = sheet.cells[row][column];
+                if (cellColor == null) {
+                  continue;
+                }
+
+                children.add(
+                  pw.Positioned(
+                    left: originX + column * cellSize,
+                    top: originY + row * cellSize,
+                    child: pw.SizedBox(
+                      width: cellSize,
+                      height: cellSize,
+                      child: pw.Container(color: _toPdfColor(cellColor)),
+                    ),
+                  ),
+                );
+              }
+            }
+
+            for (var column = 0; column <= columns; column++) {
+              children.add(
+                pw.Positioned(
+                  left: originX + column * cellSize,
+                  top: originY,
+                  child: pw.SizedBox(
+                    width: 0.6,
+                    height: gridHeight,
+                    child: pw.Container(color: gridLineColor),
+                  ),
+                ),
+              );
+            }
+
+            for (var row = 0; row <= rows; row++) {
+              children.add(
+                pw.Positioned(
+                  left: originX,
+                  top: originY + row * cellSize,
+                  child: pw.SizedBox(
+                    width: gridWidth,
+                    height: 0.6,
+                    child: pw.Container(color: gridLineColor),
+                  ),
+                ),
+              );
+            }
+
             children.add(
               pw.Positioned(
                 left: originX,
-                top: originY + row * cellSize,
+                top: originY,
                 child: pw.SizedBox(
                   width: gridWidth,
-                  height: 0.6,
-                  child: pw.Container(color: gridLineColor),
-                ),
-              ),
-            );
-          }
-
-          children.add(
-            pw.Positioned(
-              left: originX,
-              top: originY,
-              child: pw.SizedBox(
-                width: gridWidth,
-                height: gridHeight,
-                child: pw.Container(
-                  decoration: pw.BoxDecoration(
-                    border: pw.Border.all(color: borderColor, width: 1),
+                  height: gridHeight,
+                  child: pw.Container(
+                    decoration: pw.BoxDecoration(
+                      border: pw.Border.all(color: borderColor, width: 1),
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
+            );
 
-          return pw.Stack(children: children);
-        },
-      ),
-    );
+            return pw.Stack(children: children);
+          },
+        ),
+      );
+    }
 
     return pdf.save();
   }
