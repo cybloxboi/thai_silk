@@ -7,11 +7,7 @@ import '../models/grid_workbook.dart';
 import 'file_saver.dart';
 
 class LoadedWorkbook {
-  const LoadedWorkbook({
-    required this.workbook,
-    required this.name,
-    this.path,
-  });
+  const LoadedWorkbook({required this.workbook, required this.name, this.path});
 
   final GridWorkbook workbook;
   final String name;
@@ -71,8 +67,9 @@ class WorkbookStorage {
     String? currentPath,
     String? suggestedFileName,
   }) async {
-    final fileName =
-        _ensureExtension(suggestedFileName ?? defaultFileName(DateTime.now()));
+    final fileName = _ensureExtension(
+      suggestedFileName ?? defaultFileName(DateTime.now()),
+    );
     final bytes = Uint8List.fromList(
       utf8.encode(jsonEncode(workbook.toJson())),
     );

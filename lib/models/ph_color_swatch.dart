@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class PhColorSwatch {
   const PhColorSwatch({
-    required this.label,
+    required this.pHValue,
     required this.color,
     required this.rgb,
     required this.hsv,
@@ -12,7 +12,7 @@ class PhColorSwatch {
     required this.steps,
   });
 
-  final String label;
+  final double pHValue;
   final Color color;
   final String rgb;
   final String hsv;

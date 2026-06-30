@@ -47,7 +47,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
 
   static const List<PhColorSwatch> phPalette = [
     PhColorSwatch(
-      label: 'pH2.5',
+      pHValue: 2.5,
       color: Color(0xFFB4261D),
       rgb: '180, 38, 29',
       hsv: '3.6°, 0.839, 0.706',
@@ -61,7 +61,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       steps: [
         'แช่ไหมในน้ำเปล่า 500 ml เวลา 10 นาที',
         'ตั้งไฟอุ่นน้ำครั่งให้อุณหภูมิ 50°C',
-        'ปรับ pH น้ำครั่งตามส่วนผวม',
+        'ปรับ pH น้ำครั่งตามส่วนผสม',
         'วัด pH ในหม้อ : pH 2.5',
         'แช่ไหมในน้ำครั่ง 300 ml ขยี้ บิด ๆ 5 นาที',
         'บิดไหมให้หมาด ๆ',
@@ -76,7 +76,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       ],
     ),
     PhColorSwatch(
-      label: 'pH3',
+      pHValue: 3,
       color: Color(0xFF9A120F),
       rgb: '154, 18, 15',
       hsv: '1.3°, 0.903, 0.604',
@@ -105,7 +105,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       ],
     ),
     PhColorSwatch(
-      label: 'pH3.5',
+      pHValue: 3.5,
       color: Color(0xFFB41320),
       rgb: '180, 19, 32',
       hsv: '355.2°, 0.894, 0.706',
@@ -134,7 +134,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       ],
     ),
     PhColorSwatch(
-      label: 'pH4',
+      pHValue: 4,
       color: Color(0xFF90141A),
       rgb: '144, 20, 26',
       hsv: '357.1°, 0.861, 0.565',
@@ -163,7 +163,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       ],
     ),
     PhColorSwatch(
-      label: 'pH4.5',
+      pHValue: 4.5,
       color: Color(0xFF7B0A12),
       rgb: '123, 10, 18',
       hsv: '355.8°, 0.919, 0.482',
@@ -177,7 +177,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       steps: [
         'แช่ไหมในน้ำเปล่า 500 ml เวลา 10 นาที',
         'ตั้งไฟอุ่นน้ำครั่งให้อุณหภูมิ 50°C',
-        'ปรับ pH น้ำครั่งตามส่วนผวม',
+        'ปรับ pH น้ำครั่งตามส่วนผสม',
         'วัด pH ในหม้อ : pH 4.5',
         'แช่ไหมในน้ำครั่ง 300 ml ขยี้ บิด ๆ 5 นาที',
         'บิดไหมให้หมาด ๆ',
@@ -192,7 +192,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       ],
     ),
     PhColorSwatch(
-      label: 'pH5',
+      pHValue: 5,
       color: Color(0xFF8F2231),
       rgb: '143, 34, 49',
       hsv: '351.7°, 0.762, 0.561',
@@ -221,20 +221,17 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       ],
     ),
     PhColorSwatch(
-      label: 'pH5.5',
+      pHValue: 5.5,
       color: Color(0xFF83242D),
       rgb: '131, 36, 45',
       hsv: '354.3°, 0.725, 0.514',
       lab: '30.47, 39.66, 18.90',
       hex: '#83242D',
-      requirements: [
-        'น้ำครั่ง 300 ml',
-        'สารส้มช่วยติดสี 0.5 g',
-      ],
+      requirements: ['น้ำครั่ง 300 ml', 'สารส้มช่วยติดสี 0.5 g'],
       steps: [
         'แช่ไหมในน้ำเปล่า 500 ml เวลา 10 นาที',
         'ตั้งไฟอุ่นน้ำครั่งให้อุณหภูมิ 50°C',
-        'ปรับ pH น้ำครั่งตามส่วนผวม',
+        'ปรับ pH น้ำครั่งตามส่วนผสม',
         'วัด pH ในหม้อ : pH 5.5',
         'แช่ไหมในน้ำครั่ง 300 ml ขยี้ บิด ๆ 5 นาที',
         'บิดไหมให้หมาด ๆ',
@@ -249,7 +246,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       ],
     ),
     PhColorSwatch(
-      label: 'pH6',
+      pHValue: 6,
       color: Color(0xFFBE5955),
       rgb: '190, 89, 85',
       hsv: '2.3°, 0.553, 0.745',
@@ -278,7 +275,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       ],
     ),
     PhColorSwatch(
-      label: 'pH6.5',
+      pHValue: 6.5,
       color: Color(0xFFC06759),
       rgb: '192, 103, 89',
       hsv: '8.2°, 0.536, 0.753',
@@ -292,7 +289,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       steps: [
         'แช่ไหมในน้ำเปล่า 500 ml เวลา 10 นาที',
         'ตั้งไฟอุ่นน้ำครั่งให้อุณหภูมิ 50°C',
-        'ปรับ pH น้ำครั่งตามส่วนผวม',
+        'ปรับ pH น้ำครั่งตามส่วนผสม',
         'วัด pH ในหม้อ : pH 6.5',
         'แช่ไหมในน้ำครั่ง 300 ml ขยี้ บิด ๆ 5 นาที',
         'บิดไหมให้หมาด ๆ',
@@ -307,7 +304,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       ],
     ),
     PhColorSwatch(
-      label: 'pH7',
+      pHValue: 7,
       color: Color(0xFFD48064),
       rgb: '212, 128, 100',
       hsv: '15.0°, 0.528, 0.831',
@@ -845,11 +842,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
             currentFileName ?? WorkbookStorage.defaultFileName(DateTime.now()),
       );
 
-      _applyWorkbook(
-        workbook,
-        filePath: saved.path,
-        fileName: saved.name,
-      );
+      _applyWorkbook(workbook, filePath: saved.path, fileName: saved.name);
       if (!mounted) {
         return;
       }

@@ -85,7 +85,7 @@ class _PhColorHelpDialogState extends State<PhColorHelpDialog> {
                 children: [
                   for (var index = 0; index < widget.swatches.length; index++)
                     ChoiceChip(
-                      label: Text(widget.swatches[index].label),
+                      label: Text('pH ${widget.swatches[index].pHValue}'),
                       selected: _selectedIndex == index,
                       selectedColor: const Color(0xFFD6F0E8),
                       onSelected: (_) {
@@ -107,7 +107,7 @@ class _PhColorHelpDialogState extends State<PhColorHelpDialog> {
                 ),
               ),
               const SizedBox(height: 16),
-              InfoTile(label: 'pH', value: _selectedSwatch.label),
+              InfoTile(label: 'pH', value: '${_selectedSwatch.pHValue}'),
               const SizedBox(height: 10),
               InfoTile(label: 'HEX', value: _selectedSwatch.hex),
               const SizedBox(height: 10),

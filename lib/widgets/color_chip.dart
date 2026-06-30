@@ -47,7 +47,10 @@ class ColorChip extends StatelessWidget {
           alignment: Alignment.center,
           children: [
             if (isEraser)
-              const Icon(Icons.delete_outline_rounded, color: Color(0xFF374151)),
+              const Icon(
+                Icons.delete_outline_rounded,
+                color: Color(0xFF374151),
+              ),
             if (selected && showSelectionCheck)
               Positioned(
                 right: diameter * 0.06,
@@ -59,11 +62,7 @@ class ColorChip extends StatelessWidget {
                     color: Color(0xFF0F766E),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.check,
-                    size: 12,
-                    color: Colors.white,
-                  ),
+                  child: const Icon(Icons.check, size: 12, color: Colors.white),
                 ),
               ),
           ],

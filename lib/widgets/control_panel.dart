@@ -373,7 +373,8 @@ class _ControlsPanelState extends State<ControlsPanel> {
                         ColorChip(
                           color: color,
                           selected:
-                              !widget.eraseMode && widget.selectedColor == color,
+                              !widget.eraseMode &&
+                              widget.selectedColor == color,
                           onTap: () => widget.onPickColor(color),
                         ),
                       ],
@@ -408,19 +409,21 @@ class _ControlsPanelState extends State<ControlsPanel> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         ColorChip(
-                          key: ValueKey('ph_chip_${swatch.label}'),
+                          key: ValueKey('ph_chip_${swatch.pHValue}'),
                           color: swatch.color,
-                          selected: !widget.eraseMode &&
+                          selected:
+                              !widget.eraseMode &&
                               widget.selectedColor == swatch.color,
                           onTap: () => widget.onPickPhColor(swatch),
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          swatch.label,
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF374151),
-                          ),
+                          'pH ${swatch.pHValue}',
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF374151),
+                              ),
                         ),
                       ],
                     ),
@@ -514,14 +517,14 @@ class _ControlsPanelState extends State<ControlsPanel> {
                         ? null
                         : widget.onRepeatPatternDiagonalDownRight,
                     icon: const Icon(Icons.south_east),
-                    label: const Text('ทแยง ↘'),
+                    label: const Text('ทแยงลง'),
                   ),
                   FilledButton.icon(
                     onPressed: widget.patternSelection == null
                         ? null
                         : widget.onRepeatPatternDiagonalUpRight,
                     icon: const Icon(Icons.north_east),
-                    label: const Text('ทแยง ↗'),
+                    label: const Text('ทแยงขึ้น'),
                   ),
                   FilledButton.icon(
                     onPressed: widget.patternSelection == null
