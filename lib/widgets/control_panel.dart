@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -301,11 +302,12 @@ class _ControlsPanelState extends State<ControlsPanel> {
                     icon: const Icon(Icons.save_outlined),
                     label: const Text('บันทึก'),
                   ),
-                  OutlinedButton.icon(
-                    onPressed: widget.onSaveFileAs,
-                    icon: const Icon(Icons.save_as_outlined),
-                    label: const Text('บันทึกเป็น'),
-                  ),
+                  if (!kIsWeb)
+                    OutlinedButton.icon(
+                      onPressed: widget.onSaveFileAs,
+                      icon: const Icon(Icons.save_as_outlined),
+                      label: const Text('บันทึกเป็น'),
+                    ),
                   OutlinedButton.icon(
                     onPressed: widget.onAddSheet,
                     icon: const Icon(Icons.add_box_outlined),
