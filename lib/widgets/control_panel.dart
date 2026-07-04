@@ -287,11 +287,6 @@ class _ControlsPanelState extends State<ControlsPanel>
                 widget.isExportingPdf ? 'กำลังสร้าง PDF...' : 'ส่งออก PDF',
               ),
             ),
-            FilledButton.icon(
-              onPressed: widget.onClearAll,
-              icon: const Icon(Icons.delete_outline),
-              label: const Text('ล้างทั้งตาราง'),
-            ),
           ],
         ),
         const SizedBox(height: 10),
@@ -326,8 +321,6 @@ class _ControlsPanelState extends State<ControlsPanel>
             fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(height: 10),
-        _buildSheetColorMenu(colorScheme),
         const SizedBox(height: 12),
         Text(
           'แตะช่องบนตารางเพื่อใส่สี และเลือกยางลบเพื่อลบสีในแต่ละช่อง',
@@ -335,6 +328,8 @@ class _ControlsPanelState extends State<ControlsPanel>
             color: colorScheme.onSurfaceVariant,
           ),
         ),
+        const SizedBox(height: 10),
+        _buildSheetColorMenu(colorScheme),
         const SizedBox(height: 10),
         Wrap(
           spacing: 10,
@@ -424,6 +419,12 @@ class _ControlsPanelState extends State<ControlsPanel>
                 ],
               ),
           ],
+        ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: widget.onClearAll,
+          icon: const Icon(Icons.delete_outline),
+          label: const Text('ล้างทั้งตาราง'),
         ),
       ],
     );
@@ -682,7 +683,7 @@ class _ControlsPanelState extends State<ControlsPanel>
           dense: true,
           contentPadding: EdgeInsets.zero,
           leading: Icon(Icons.person_outline),
-          title: Text('นางสาวพาขวัญ'),
+          title: Text('นางสาวพาขวัญ บุตสีนนท์'),
         ),
         const ListTile(
           dense: true,

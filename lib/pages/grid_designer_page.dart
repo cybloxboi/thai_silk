@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_selector/file_selector.dart';
@@ -37,9 +35,6 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
   static const double maxZoom = 2.0;
   static const double zoomStep = 0.1;
   static const int maxRepeatSpacing = 12;
-
-  final ScrollController _horizontalCanvasController = ScrollController();
-  final ScrollController _verticalCanvasController = ScrollController();
 
   final List<Color> palette = const [
     Color(0xFF0F766E),
@@ -360,8 +355,6 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
 
   @override
   void dispose() {
-    _horizontalCanvasController.dispose();
-    _verticalCanvasController.dispose();
     super.dispose();
   }
 
@@ -596,129 +589,6 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
   void _zoomOut() => _setZoom(zoomLevel - zoomStep);
 
   void _resetZoom() => _setZoom(1.0);
-
-  Widget _buildHorizontalScrollSlider(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return AnimatedBuilder(
-      animation: _horizontalCanvasController,
-      builder: (context, _) {
-        ScrollPosition? activePosition;
-        if (_horizontalCanvasController.hasClients) {
-          for (final position
-              in _horizontalCanvasController.positions.toList().reversed) {
-            if (position.hasContentDimensions) {
-              activePosition = position;
-              break;
-            }
-          }
-        }
-
-        final hasMetrics = activePosition?.hasContentDimensions ?? false;
-        final maxExtent = hasMetrics ? activePosition!.maxScrollExtent : 0.0;
-        final currentOffset = hasMetrics ? activePosition!.pixels : 0.0;
-        final progress = maxExtent <= 0
-            ? 0.0
-            : (currentOffset / maxExtent).clamp(0.0, 1.0);
-
-        return SizedBox(
-          height: 22,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final trackWidth = constraints.maxWidth;
-                const trackHeight = 2.0;
-                const thumbSize = 16.0;
-                final usableWidth = math.max(1.0, trackWidth - thumbSize);
-                final thumbLeft = usableWidth * progress;
-
-                void jumpToLocal(Offset localPosition) {
-                  if (!hasMetrics || maxExtent <= 0) {
-                    return;
-                  }
-
-                  final position = activePosition;
-                  if (position == null || !position.hasContentDimensions) {
-                    return;
-                  }
-
-                  final nextThumbLeft = (localPosition.dx - thumbSize / 2)
-                      .clamp(0.0, usableWidth);
-                  final nextOffset = usableWidth <= 0
-                      ? 0.0
-                      : (nextThumbLeft / usableWidth) * maxExtent;
-                  position.jumpTo(
-                    nextOffset
-                        .clamp(
-                          position.minScrollExtent,
-                          position.maxScrollExtent,
-                        )
-                        .toDouble(),
-                  );
-                }
-
-                return GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTapDown: (details) => jumpToLocal(details.localPosition),
-                  onHorizontalDragStart: (details) =>
-                      jumpToLocal(details.localPosition),
-                  onHorizontalDragUpdate: (details) =>
-                      jumpToLocal(details.localPosition),
-                  child: Stack(
-                    alignment: Alignment.centerLeft,
-                    children: [
-                      Positioned.fill(
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(999),
-                            child: Container(
-                              height: trackHeight,
-                              width: trackWidth,
-                              color: colorScheme.outlineVariant.withValues(
-                                alpha: 0.55,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        left: thumbLeft,
-                        top: (22 - thumbSize) / 2,
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 120),
-                          curve: Curves.easeOut,
-                          width: thumbSize,
-                          height: thumbSize,
-                          decoration: BoxDecoration(
-                            color: hasMetrics && maxExtent > 0
-                                ? colorScheme.primary
-                                : colorScheme.onSurfaceVariant.withValues(
-                                    alpha: 0.36,
-                                  ),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                                color: Colors.black.withValues(alpha: 0.15),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   void _selectSheet(int index) {
     if (index == workbook.activeSheetIndex) {
@@ -1329,8 +1199,6 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
                   final canvas = GridCanvas(
                     baseSize: canvasBaseSize,
                     cells: activeSheet.cells,
-                    horizontalController: _horizontalCanvasController,
-                    verticalController: _verticalCanvasController,
                     selection: patternSelection,
                     cellSize: cellSize,
                     pageMargin: pageMargin,
@@ -1443,17 +1311,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Expanded(
-                                        child: Column(
-                                          children: [
-                                            Expanded(
-                                              child: PaperShell(child: canvas),
-                                            ),
-                                            const SizedBox(height: 12),
-                                            _buildHorizontalScrollSlider(
-                                              context,
-                                            ),
-                                          ],
-                                        ),
+                                        child: PaperShell(child: canvas),
                                       ),
                                       const SizedBox(width: 20),
                                       SizedBox(width: 340, child: controls),
@@ -1470,17 +1328,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
                                       const SizedBox(height: 16),
                                       Expanded(
                                         flex: 5,
-                                        child: Column(
-                                          children: [
-                                            Expanded(
-                                              child: PaperShell(child: canvas),
-                                            ),
-                                            const SizedBox(height: 12),
-                                            _buildHorizontalScrollSlider(
-                                              context,
-                                            ),
-                                          ],
-                                        ),
+                                        child: PaperShell(child: canvas),
                                       ),
                                     ],
                                   ),

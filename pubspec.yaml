@@ -37,7 +37,7 @@ dependencies:
   file_selector: ^1.0.3
   pdf: ^3.11.3
   printing: ^5.13.4
-  syncfusion_flutter_pdfviewer: ^33.2.13
+  pdfrx: ^2.4.4
 
 dev_dependencies:
   flutter_test:
