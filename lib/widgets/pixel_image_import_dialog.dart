@@ -8,11 +8,13 @@ class PixelImageImportSettings {
     required this.mode,
     required this.columns,
     required this.rows,
+    required this.maxColors,
   });
 
   final PixelImageImportMode mode;
   final int columns;
   final int rows;
+  final int maxColors;
 }
 
 class PixelImageImportDialog extends StatefulWidget {
@@ -33,6 +35,7 @@ class _PixelImageImportDialogState extends State<PixelImageImportDialog> {
   late PixelImageImportMode _mode;
   late final TextEditingController _columnsController;
   late final TextEditingController _rowsController;
+  late final TextEditingController _maxColorsController;
 
   @override
   void initState() {
@@ -42,6 +45,7 @@ class _PixelImageImportDialogState extends State<PixelImageImportDialog> {
       text: _defaultSize(widget.maxColumns),
     );
     _rowsController = TextEditingController(text: _defaultSize(widget.maxRows));
+    _maxColorsController = TextEditingController(text: '16');
   }
 
   String _defaultSize(int maxSize) {
@@ -56,6 +60,7 @@ class _PixelImageImportDialogState extends State<PixelImageImportDialog> {
   void dispose() {
     _columnsController.dispose();
     _rowsController.dispose();
+    _maxColorsController.dispose();
     super.dispose();
   }
 
@@ -70,6 +75,7 @@ class _PixelImageImportDialogState extends State<PixelImageImportDialog> {
       mode: _mode,
       columns: _parseSize(_columnsController.text, 1, widget.maxColumns),
       rows: _parseSize(_rowsController.text, 1, widget.maxRows),
+      maxColors: _parseSize(_maxColorsController.text, 16, 256),
     );
     Navigator.of(context).pop(settings);
   }
@@ -144,6 +150,17 @@ class _PixelImageImportDialogState extends State<PixelImageImportDialog> {
                   ),
                 ),
               ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: _maxColorsController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: const InputDecoration(
+                  labelText: 'จำนวนสี',
+                  helperText: 'รวมเฉดสีใกล้เคียงให้เหลือ 1-256 สี',
+                  border: OutlineInputBorder(),
+                ),
+              ),
             ],
           ),
         ),
@@ -167,10 +184,10 @@ class _PixelImageImportDialogState extends State<PixelImageImportDialog> {
     final theme = Theme.of(context);
     final borderColor = selected
         ? theme.colorScheme.primary
-        : const Color(0x22000000);
+        : theme.colorScheme.outlineVariant;
     final backgroundColor = selected
         ? theme.colorScheme.primaryContainer.withValues(alpha: 0.4)
-        : const Color(0xFFF8F8F8);
+        : theme.colorScheme.surfaceContainerHighest;
 
     return Material(
       color: backgroundColor,
@@ -191,7 +208,7 @@ class _PixelImageImportDialogState extends State<PixelImageImportDialog> {
                 selected ? Icons.radio_button_checked : Icons.circle_outlined,
                 color: selected
                     ? theme.colorScheme.primary
-                    : const Color(0xFF6B7280),
+                    : theme.colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -208,7 +225,7 @@ class _PixelImageImportDialogState extends State<PixelImageImportDialog> {
                     Text(
                       subtitle,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFF5D625D),
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],

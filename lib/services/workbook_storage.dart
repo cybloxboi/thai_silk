@@ -70,6 +70,7 @@ class WorkbookStorage {
     final fileName = _ensureExtension(
       suggestedFileName ?? defaultFileName(DateTime.now()),
     );
+    final dialogSuggestedName = _removeExtension(fileName);
     final bytes = Uint8List.fromList(
       utf8.encode(jsonEncode(workbook.toJson())),
     );
@@ -84,12 +85,17 @@ class WorkbookStorage {
       return SavedWorkbook(name: fileName);
     }
 
-    final path = currentPath ?? await pickSavePath(suggestedFileName: fileName);
+    final normalizedCurrentPath = currentPath == null
+        ? null
+        : _normalizeSavedPath(currentPath);
+    final path =
+        normalizedCurrentPath ??
+        await pickSavePath(suggestedFileName: dialogSuggestedName);
     if (path == null) {
       throw Exception('ผู้ใช้ยกเลิกการบันทึก');
     }
 
-    final resolvedPath = _ensureExtension(path);
+    final resolvedPath = _ensureExtension(_normalizeSavedPath(path));
     await saveBytesToDestination(
       bytes: bytes,
       destination: resolvedPath,
@@ -113,6 +119,29 @@ class WorkbookStorage {
     }
 
     return '$path.$fileExtension';
+  }
+
+  static String _removeExtension(String path) {
+    final lowerPath = path.toLowerCase();
+    final suffix = '.$fileExtension';
+    if (!lowerPath.endsWith(suffix)) {
+      return path;
+    }
+
+    return path.substring(0, path.length - suffix.length);
+  }
+
+  static String _normalizeSavedPath(String path) {
+    var normalizedPath = path;
+    final duplicateSuffix = '.$fileExtension.$fileExtension';
+    while (normalizedPath.toLowerCase().endsWith(duplicateSuffix)) {
+      normalizedPath = normalizedPath.substring(
+        0,
+        normalizedPath.length - '.$fileExtension'.length,
+      );
+    }
+
+    return normalizedPath;
   }
 
   static String? _basenameFromPath(String? path) {

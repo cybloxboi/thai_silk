@@ -8,6 +8,12 @@ class GridPainter extends CustomPainter {
     required this.cellSize,
     required this.pageMargin,
     required this.zoomLevel,
+    required this.backgroundColor,
+    required this.paperColor,
+    required this.labelColor,
+    required this.guideColor,
+    required this.borderColor,
+    required this.selectionColor,
     this.selection,
   });
 
@@ -15,11 +21,17 @@ class GridPainter extends CustomPainter {
   final double cellSize;
   final double pageMargin;
   final double zoomLevel;
+  final Color backgroundColor;
+  final Color paperColor;
+  final Color labelColor;
+  final Color guideColor;
+  final Color borderColor;
+  final Color selectionColor;
   final PatternSelection? selection;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final backgroundPaint = Paint()..color = const Color(0xFFFCFBF7);
+    final backgroundPaint = Paint()..color = backgroundColor;
     canvas.drawRect(Offset.zero & size, backgroundPaint);
 
     final scaledCellSize = cellSize * zoomLevel;
@@ -28,14 +40,14 @@ class GridPainter extends CustomPainter {
     final gridHeight = cells.length * scaledCellSize;
     final gridOrigin = Offset(scaledMargin, scaledMargin);
 
-    final paperPaint = Paint()..color = Colors.white;
+    final paperPaint = Paint()..color = paperColor;
     canvas.drawRect(
       Rect.fromLTWH(scaledMargin, scaledMargin, gridWidth, gridHeight),
       paperPaint,
     );
 
     final labelStyle = TextStyle(
-      color: const Color(0xFF4B5563),
+      color: labelColor,
       fontSize: 9 * zoomLevel,
       fontWeight: FontWeight.w600,
     );
@@ -99,12 +111,12 @@ class GridPainter extends CustomPainter {
       );
 
       final selectionFillPaint = Paint()
-        ..color = const Color(0x330F766E)
+        ..color = selectionColor.withValues(alpha: 0.2)
         ..style = PaintingStyle.fill;
       canvas.drawRect(selectionRect, selectionFillPaint);
 
       final selectionBorderPaint = Paint()
-        ..color = const Color(0xFF0F766E)
+        ..color = selectionColor
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.8 * zoomLevel;
       canvas.drawRect(
@@ -114,7 +126,7 @@ class GridPainter extends CustomPainter {
     }
 
     final guidePaint = Paint()
-      ..color = const Color(0xFFE4DDD1)
+      ..color = guideColor
       ..strokeWidth = 0.6 * zoomLevel;
     for (var column = 0; column <= cells.first.length; column++) {
       final x = gridOrigin.dx + column * scaledCellSize;
@@ -134,7 +146,7 @@ class GridPainter extends CustomPainter {
     }
 
     final borderPaint = Paint()
-      ..color = const Color(0xFFB8AB95)
+      ..color = borderColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.4 * zoomLevel;
     canvas.drawRect(

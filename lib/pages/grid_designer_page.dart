@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_selector/file_selector.dart';
@@ -36,6 +38,9 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
   static const double zoomStep = 0.1;
   static const int maxRepeatSpacing = 12;
 
+  final ScrollController _horizontalCanvasController = ScrollController();
+  final ScrollController _verticalCanvasController = ScrollController();
+
   final List<Color> palette = const [
     Color(0xFF0F766E),
     Color(0xFF2563EB),
@@ -55,7 +60,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       hex: '#B4261D',
       requirements: [
         'น้ำครั่ง 300 ml',
-        'น้ำมะขามเปียก 260 ml',
+        'น้ำมะขามเปียก 260 ml pH 2.4',
         'สารส้มช่วยติดสี 0.5 g',
       ],
       steps: [
@@ -84,7 +89,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       hex: '#9A120F',
       requirements: [
         'น้ำครั่ง 300 ml',
-        'น้ำมะขามเปียก 88 ml',
+        'น้ำมะขามเปียก 88 ml pH 2.4',
         'สารส้มช่วยติดสี 0.5 g',
       ],
       steps: [
@@ -113,7 +118,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       hex: '#B41320',
       requirements: [
         'น้ำครั่ง 300 ml',
-        'น้ำมะขามเปียก 35 ml',
+        'น้ำมะขามเปียก 35 ml pH 2.4',
         'สารส้มช่วยติดสี 0.5 g',
       ],
       steps: [
@@ -142,7 +147,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       hex: '#90141A',
       requirements: [
         'น้ำครั่ง 300 ml',
-        'น้ำมะขามเปียก 20 ml',
+        'น้ำมะขามเปียก 20 ml pH 2.4',
         'สารส้มช่วยติดสี 0.5 g',
       ],
       steps: [
@@ -171,7 +176,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       hex: '#7B0A12',
       requirements: [
         'น้ำครั่ง 300 ml',
-        'น้ำมะขามเปียก 12 ml',
+        'น้ำมะขามเปียก 12 ml pH 2.4',
         'สารส้มช่วยติดสี 0.5 g',
       ],
       steps: [
@@ -200,7 +205,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       hex: '#8F2231',
       requirements: [
         'น้ำครั่ง 300 ml',
-        'น้ำมะขามเปียก 4 ml',
+        'น้ำมะขามเปียก 4 ml pH 2.4',
         'สารส้มช่วยติดสี 0.5 g',
       ],
       steps: [
@@ -254,7 +259,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       hex: '#BE5955',
       requirements: [
         'น้ำครั่ง 300 ml',
-        'น้ำเถ้า 4 ml',
+        'น้ำเถ้า 4 ml pH 12',
         'สารส้มช่วยติดสี 0.5 g',
       ],
       steps: [
@@ -283,7 +288,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       hex: '#C06759',
       requirements: [
         'น้ำครั่ง 300 ml',
-        'น้ำเถ้า 9 ml',
+        'น้ำเถ้า 9 ml pH 12',
         'สารส้มช่วยติดสี 0.5 g',
       ],
       steps: [
@@ -312,7 +317,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       hex: '#D48064',
       requirements: [
         'น้ำครั่ง 300 ml',
-        'น้ำเถ้า 15 ml',
+        'น้ำเถ้า 15 ml pH 12',
         'สารส้มช่วยติดสี 0.5 g',
       ],
       steps: [
@@ -353,12 +358,54 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
   final List<GridWorkbook> _redoStack = [];
   bool _historyRecordedForGesture = false;
 
+  @override
+  void dispose() {
+    _horizontalCanvasController.dispose();
+    _verticalCanvasController.dispose();
+    super.dispose();
+  }
+
   GridSheet get activeSheet => workbook.activeSheet;
 
   int get filledCount => activeSheet.cells.fold<int>(
     0,
     (total, row) => total + row.whereType<Color>().length,
   );
+
+  List<Color> get activeSheetColors {
+    final colorCounts = <int, ({Color color, int count})>{};
+    for (final row in activeSheet.cells) {
+      for (final color in row) {
+        if (color == null) {
+          continue;
+        }
+        final colorKey = _colorKey(color);
+        final existing = colorCounts[colorKey];
+        colorCounts[colorKey] = (
+          color: color,
+          count: existing == null ? 1 : existing.count + 1,
+        );
+      }
+    }
+
+    final colors = colorCounts.values.toList()
+      ..sort((a, b) {
+        final countCompare = b.count.compareTo(a.count);
+        if (countCompare != 0) {
+          return countCompare;
+        }
+        return _colorKey(a.color).compareTo(_colorKey(b.color));
+      });
+    return [for (final colorCount in colors) colorCount.color];
+  }
+
+  int _colorKey(Color color) {
+    final alpha = (color.a * 255).round().clamp(0, 255).toInt();
+    final red = (color.r * 255).round().clamp(0, 255).toInt();
+    final green = (color.g * 255).round().clamp(0, 255).toInt();
+    final blue = (color.b * 255).round().clamp(0, 255).toInt();
+    return alpha << 24 | red << 16 | green << 8 | blue;
+  }
 
   String get currentFileLabel {
     if (currentFileName != null && currentFileName!.trim().isNotEmpty) {
@@ -550,6 +597,129 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
 
   void _resetZoom() => _setZoom(1.0);
 
+  Widget _buildHorizontalScrollSlider(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return AnimatedBuilder(
+      animation: _horizontalCanvasController,
+      builder: (context, _) {
+        ScrollPosition? activePosition;
+        if (_horizontalCanvasController.hasClients) {
+          for (final position
+              in _horizontalCanvasController.positions.toList().reversed) {
+            if (position.hasContentDimensions) {
+              activePosition = position;
+              break;
+            }
+          }
+        }
+
+        final hasMetrics = activePosition?.hasContentDimensions ?? false;
+        final maxExtent = hasMetrics ? activePosition!.maxScrollExtent : 0.0;
+        final currentOffset = hasMetrics ? activePosition!.pixels : 0.0;
+        final progress = maxExtent <= 0
+            ? 0.0
+            : (currentOffset / maxExtent).clamp(0.0, 1.0);
+
+        return SizedBox(
+          height: 22,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final trackWidth = constraints.maxWidth;
+                const trackHeight = 2.0;
+                const thumbSize = 16.0;
+                final usableWidth = math.max(1.0, trackWidth - thumbSize);
+                final thumbLeft = usableWidth * progress;
+
+                void jumpToLocal(Offset localPosition) {
+                  if (!hasMetrics || maxExtent <= 0) {
+                    return;
+                  }
+
+                  final position = activePosition;
+                  if (position == null || !position.hasContentDimensions) {
+                    return;
+                  }
+
+                  final nextThumbLeft = (localPosition.dx - thumbSize / 2)
+                      .clamp(0.0, usableWidth);
+                  final nextOffset = usableWidth <= 0
+                      ? 0.0
+                      : (nextThumbLeft / usableWidth) * maxExtent;
+                  position.jumpTo(
+                    nextOffset
+                        .clamp(
+                          position.minScrollExtent,
+                          position.maxScrollExtent,
+                        )
+                        .toDouble(),
+                  );
+                }
+
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTapDown: (details) => jumpToLocal(details.localPosition),
+                  onHorizontalDragStart: (details) =>
+                      jumpToLocal(details.localPosition),
+                  onHorizontalDragUpdate: (details) =>
+                      jumpToLocal(details.localPosition),
+                  child: Stack(
+                    alignment: Alignment.centerLeft,
+                    children: [
+                      Positioned.fill(
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(999),
+                            child: Container(
+                              height: trackHeight,
+                              width: trackWidth,
+                              color: colorScheme.outlineVariant.withValues(
+                                alpha: 0.55,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: thumbLeft,
+                        top: (22 - thumbSize) / 2,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 120),
+                          curve: Curves.easeOut,
+                          width: thumbSize,
+                          height: thumbSize,
+                          decoration: BoxDecoration(
+                            color: hasMetrics && maxExtent > 0
+                                ? colorScheme.primary
+                                : colorScheme.onSurfaceVariant.withValues(
+                                    alpha: 0.36,
+                                  ),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                                color: Colors.black.withValues(alpha: 0.15),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _selectSheet(int index) {
     if (index == workbook.activeSheetIndex) {
       return;
@@ -649,13 +819,13 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text('ลบชีต'),
-          content: Text('ต้องการลบ "${activeSheet.name}" ใช่ไหม'),
+          content: Text('ต้องการลบ ${activeSheet.name} หรือไม่'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
               child: const Text('ยกเลิก'),
             ),
-            FilledButton.tonal(
+            FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: const Text('ลบ'),
             ),
@@ -668,7 +838,15 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
       return;
     }
 
+    final nextIndex = workbook.activeSheetIndex == workbook.sheets.length - 1
+        ? workbook.activeSheetIndex - 1
+        : workbook.activeSheetIndex;
     _applyWorkbookChange(workbook.removeSheet(workbook.activeSheetIndex));
+    setState(() {
+      workbook = workbook.copyWith(
+        activeSheetIndex: nextIndex.clamp(0, workbook.sheets.length - 2),
+      );
+    });
   }
 
   Future<void> _openFile() async {
@@ -787,6 +965,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
         imageBytes: imageBytes,
         columns: targetColumns,
         rows: targetRows,
+        maxColors: importSettings.maxColors,
       );
       final nextSheet = GridSheet.blank(
         name: activeSheet.name,
@@ -1023,15 +1202,17 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
   }
 
   Widget _buildSheetTabs(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
       elevation: 0,
-      color: const Color(0xFFF9F5EE),
+      color: colorScheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         child: Row(
           children: [
-            const Icon(Icons.grid_view_rounded, color: Color(0xFF0F766E)),
+            Icon(Icons.grid_view_rounded, color: colorScheme.primary),
             const SizedBox(width: 10),
             Expanded(
               child: SingleChildScrollView(
@@ -1148,6 +1329,8 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
                   final canvas = GridCanvas(
                     baseSize: canvasBaseSize,
                     cells: activeSheet.cells,
+                    horizontalController: _horizontalCanvasController,
+                    verticalController: _verticalCanvasController,
                     selection: patternSelection,
                     cellSize: cellSize,
                     pageMargin: pageMargin,
@@ -1177,6 +1360,7 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
                   final controls = ControlsPanel(
                     theme: theme,
                     palette: palette,
+                    sheetColors: activeSheetColors,
                     phPalette: phPalette,
                     selectedColor: selectedColor,
                     eraseMode: eraseMode,
@@ -1195,7 +1379,6 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
                     onImportPixelImage: _importPixelImage,
                     onSaveFile: () => _saveFile(),
                     onSaveFileAs: () => _saveFile(saveAs: true),
-                    onAddSheet: _addSheet,
                     onUndo: _undo,
                     onRedo: _redo,
                     canUndo: canUndo,
@@ -1238,9 +1421,11 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
                   );
 
                   return Container(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Color(0xFFF4EFE6), Color(0xFFE7F0EC)],
+                        colors: theme.colorScheme.brightness == Brightness.dark
+                            ? const [Color(0xFF101816), Color(0xFF17231F)]
+                            : const [Color(0xFFFAE5E6), Color(0xFFF8EFF0)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -1258,7 +1443,17 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Expanded(
-                                        child: PaperShell(child: canvas),
+                                        child: Column(
+                                          children: [
+                                            Expanded(
+                                              child: PaperShell(child: canvas),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            _buildHorizontalScrollSlider(
+                                              context,
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                       const SizedBox(width: 20),
                                       SizedBox(width: 340, child: controls),
@@ -1275,7 +1470,17 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
                                       const SizedBox(height: 16),
                                       Expanded(
                                         flex: 5,
-                                        child: PaperShell(child: canvas),
+                                        child: Column(
+                                          children: [
+                                            Expanded(
+                                              child: PaperShell(child: canvas),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            _buildHorizontalScrollSlider(
+                                              context,
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -1307,10 +1512,13 @@ class _SheetTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final backgroundColor = selected
-        ? const Color(0xFF0F766E)
-        : const Color(0xFFF1ECE3);
-    final foregroundColor = selected ? Colors.white : const Color(0xFF16302D);
+        ? colorScheme.primary
+        : colorScheme.surfaceContainerHighest;
+    final foregroundColor = selected
+        ? colorScheme.onPrimary
+        : colorScheme.onSurface;
 
     return Material(
       color: backgroundColor,

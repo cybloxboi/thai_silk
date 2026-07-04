@@ -1,7 +1,6 @@
 import 'dart:math' as math;
-import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -16,9 +15,14 @@ class GridPdfExporter {
     final pdf = pw.Document();
     final pageFormat = PdfPageFormat.a4.landscape;
 
+    final boldFont = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/th_sarabun_new_bold.ttf'),
+    );
+
     const double pageInset = 20.0;
-    const double labelBandLeft = 26.0;
-    const double labelBandTop = 18.0;
+    const double labelBandLeft = 10.0;
+    const double labelBandTop = 10.0;
+    const double labelGap = 2;
 
     final availableWidth = pageFormat.width - (pageInset * 2) - labelBandLeft;
     final availableHeight = pageFormat.height - (pageInset * 2) - labelBandTop;
@@ -31,9 +35,9 @@ class GridPdfExporter {
         pageInset + labelBandTop + (availableHeight - gridHeight) / 2;
 
     final labelStyle = pw.TextStyle(
+      font: boldFont,
       color: PdfColor.fromInt(0xFF4B5563),
-      fontSize: 7.5,
-      fontWeight: pw.FontWeight.bold,
+      fontSize: 9,
     );
     final gridLineColor = PdfColor.fromInt(0xFFE4DDD1);
     final borderColor = PdfColor.fromInt(0xFFB8AB95);
@@ -54,9 +58,9 @@ class GridPdfExporter {
                 child: pw.Text(
                   sheet.name,
                   style: pw.TextStyle(
+                    font: boldFont,
                     color: PdfColor.fromInt(0xFF111827),
-                    fontSize: 10,
-                    fontWeight: pw.FontWeight.bold,
+                    fontSize: 14,
                   ),
                 ),
               ),
@@ -66,7 +70,7 @@ class GridPdfExporter {
               children.add(
                 pw.Positioned(
                   left: originX + column * cellSize,
-                  top: pageInset,
+                  top: originY - labelBandTop - labelGap,
                   child: pw.SizedBox(
                     width: cellSize,
                     height: labelBandTop,
@@ -81,13 +85,12 @@ class GridPdfExporter {
             for (var row = 0; row < rows; row++) {
               children.add(
                 pw.Positioned(
-                  left: pageInset,
+                  left: originX - labelBandLeft - labelGap,
                   top: originY + row * cellSize,
                   child: pw.SizedBox(
                     width: labelBandLeft,
                     height: cellSize,
-                    child: pw.Align(
-                      alignment: pw.Alignment.centerRight,
+                    child: pw.Center(
                       child: pw.Text('${row + 1}', style: labelStyle),
                     ),
                   ),

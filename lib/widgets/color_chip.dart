@@ -20,9 +20,10 @@ class ColorChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final borderColor = selected
-        ? const Color(0xFF0F766E)
-        : const Color(0xFFD6D0C5);
+        ? colorScheme.primary
+        : colorScheme.outlineVariant;
 
     return InkWell(
       onTap: onTap,
@@ -32,7 +33,7 @@ class ColorChip extends StatelessWidget {
         width: diameter,
         height: diameter,
         decoration: BoxDecoration(
-          color: isEraser ? const Color(0xFFF7F2E8) : color,
+          color: isEraser ? colorScheme.surfaceContainerHighest : color,
           shape: BoxShape.circle,
           border: Border.all(color: borderColor, width: selected ? 3 : 1.2),
           boxShadow: [
@@ -47,9 +48,9 @@ class ColorChip extends StatelessWidget {
           alignment: Alignment.center,
           children: [
             if (isEraser)
-              const Icon(
+              Icon(
                 Icons.delete_outline_rounded,
-                color: Color(0xFF374151),
+                color: colorScheme.onSurfaceVariant,
               ),
             if (selected && showSelectionCheck)
               Positioned(
@@ -58,8 +59,8 @@ class ColorChip extends StatelessWidget {
                 child: Container(
                   width: diameter * 0.32,
                   height: diameter * 0.32,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF0F766E),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.check, size: 12, color: Colors.white),

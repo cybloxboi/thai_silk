@@ -98,14 +98,16 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                 Text(
                   'เลือกชีตที่ต้องการส่งออก',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: const Color(0xFF5D625D),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 8),
                 SizedBox(
                   height: 260,
                   child: Material(
-                    color: const Color(0xFFF8F8F8),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(16),
                     child: SingleChildScrollView(
                       child: Column(
@@ -161,10 +163,10 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
     final theme = Theme.of(context);
     final borderColor = selected
         ? theme.colorScheme.primary
-        : const Color(0x22000000);
+        : theme.colorScheme.outlineVariant;
     final backgroundColor = selected
         ? theme.colorScheme.primaryContainer.withValues(alpha: 0.4)
-        : const Color(0xFFF8F8F8);
+        : theme.colorScheme.surfaceContainerHighest;
 
     return Material(
       color: backgroundColor,
@@ -185,7 +187,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                 selected ? Icons.radio_button_checked : Icons.circle_outlined,
                 color: selected
                     ? theme.colorScheme.primary
-                    : const Color(0xFF6B7280),
+                    : theme.colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -202,7 +204,7 @@ class _PdfExportDialogState extends State<PdfExportDialog> {
                     Text(
                       subtitle,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFF5D625D),
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],

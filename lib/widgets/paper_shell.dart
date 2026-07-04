@@ -7,15 +7,22 @@ class PaperShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F2E8),
+        color: isDark
+            ? colorScheme.surfaceContainerHigh
+            : const Color(0xFFFAE5E6),
         borderRadius: BorderRadius.circular(28),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            blurRadius: 30,
-            offset: Offset(0, 18),
-            color: Color(0x22000000),
+            blurRadius: isDark ? 18 : 30,
+            offset: const Offset(0, 18),
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.34)
+                : const Color(0x22000000),
           ),
         ],
       ),
@@ -25,8 +32,12 @@ class PaperShell extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: const Color(0xFFD8D2C4)),
+              color: isDark ? colorScheme.surfaceContainerLow : Colors.white,
+              border: Border.all(
+                color: isDark
+                    ? colorScheme.outlineVariant
+                    : const Color(0xFFFDA1A5),
+              ),
             ),
             child: child,
           ),

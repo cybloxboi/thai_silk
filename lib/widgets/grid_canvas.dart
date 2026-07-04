@@ -12,6 +12,8 @@ class GridCanvas extends StatefulWidget {
     super.key,
     required this.baseSize,
     required this.cells,
+    required this.horizontalController,
+    required this.verticalController,
     this.selection,
     required this.cellSize,
     required this.pageMargin,
@@ -27,6 +29,8 @@ class GridCanvas extends StatefulWidget {
 
   final Size baseSize;
   final List<List<Color?>> cells;
+  final ScrollController horizontalController;
+  final ScrollController verticalController;
   final PatternSelection? selection;
   final double cellSize;
   final double pageMargin;
@@ -44,15 +48,20 @@ class GridCanvas extends StatefulWidget {
 }
 
 class _GridCanvasState extends State<GridCanvas> {
-  final ScrollController _horizontalController = ScrollController();
-  final ScrollController _verticalController = ScrollController();
   double? _scaleStartZoom;
 
-  @override
-  void dispose() {
-    _horizontalController.dispose();
-    _verticalController.dispose();
-    super.dispose();
+  ScrollPosition? _primaryPosition(ScrollController controller) {
+    if (!controller.hasClients) {
+      return null;
+    }
+
+    for (final position in controller.positions.toList().reversed) {
+      if (position.hasContentDimensions) {
+        return position;
+      }
+    }
+
+    return null;
   }
 
   void _applyZoom(double nextZoom, Offset focalPoint) {
@@ -64,11 +73,11 @@ class _GridCanvasState extends State<GridCanvas> {
     }
 
     final currentZoom = widget.zoomLevel;
-    final currentHorizontalOffset = _horizontalController.hasClients
-        ? _horizontalController.offset
+    final currentHorizontalOffset = widget.horizontalController.hasClients
+        ? widget.horizontalController.offset
         : 0.0;
-    final currentVerticalOffset = _verticalController.hasClients
-        ? _verticalController.offset
+    final currentVerticalOffset = widget.verticalController.hasClients
+        ? widget.verticalController.offset
         : 0.0;
     final zoomRatio = clampedZoom / currentZoom;
 
@@ -83,17 +92,17 @@ class _GridCanvasState extends State<GridCanvas> {
       if (!mounted) {
         return;
       }
-      _jumpTo(_horizontalController, targetHorizontalOffset);
-      _jumpTo(_verticalController, targetVerticalOffset);
+      _jumpTo(widget.horizontalController, targetHorizontalOffset);
+      _jumpTo(widget.verticalController, targetVerticalOffset);
     });
   }
 
   void _jumpTo(ScrollController controller, double targetOffset) {
-    if (!controller.hasClients) {
+    final position = _primaryPosition(controller);
+    if (position == null) {
       return;
     }
 
-    final position = controller.position;
     final clampedOffset = targetOffset
         .clamp(position.minScrollExtent, position.maxScrollExtent)
         .toDouble();
@@ -131,6 +140,8 @@ class _GridCanvasState extends State<GridCanvas> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
     final childSize = Size(
       widget.baseSize.width * widget.zoomLevel,
       widget.baseSize.height * widget.zoomLevel,
@@ -143,10 +154,10 @@ class _GridCanvasState extends State<GridCanvas> {
         onScaleStart: _handleScaleStart,
         onScaleUpdate: _handleScaleUpdate,
         child: SingleChildScrollView(
-          controller: _horizontalController,
+          controller: widget.horizontalController,
           scrollDirection: Axis.horizontal,
           child: SingleChildScrollView(
-            controller: _verticalController,
+            controller: widget.verticalController,
             scrollDirection: Axis.vertical,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -173,6 +184,20 @@ class _GridCanvasState extends State<GridCanvas> {
                   pageMargin: widget.pageMargin,
                   zoomLevel: widget.zoomLevel,
                   selection: widget.selection,
+                  backgroundColor: isDark
+                      ? colorScheme.surfaceContainerHighest
+                      : const Color(0xFFFCFBF7),
+                  paperColor: isDark
+                      ? colorScheme.surfaceContainerLowest
+                      : Colors.white,
+                  labelColor: colorScheme.onSurfaceVariant,
+                  guideColor: isDark
+                      ? colorScheme.outlineVariant.withValues(alpha: 0.64)
+                      : const Color(0xFFE4DDD1),
+                  borderColor: isDark
+                      ? colorScheme.outline
+                      : const Color(0xFFB8AB95),
+                  selectionColor: colorScheme.primary,
                 ),
               ),
             ),

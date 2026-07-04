@@ -8,11 +8,13 @@ class InfoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFEAF3EF),
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
@@ -23,7 +25,10 @@ class InfoTile extends StatelessWidget {
           Flexible(
             child: Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.w700),
+              style: TextStyle(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],

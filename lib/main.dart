@@ -13,15 +13,29 @@ class ThaiSilkApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Thai Silk',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0F766E),
-          brightness: Brightness.light,
-        ),
-        scaffoldBackgroundColor: const Color(0xFFF4EFE6),
-      ),
+      theme: _buildTheme(Brightness.light),
+      darkTheme: _buildTheme(Brightness.dark),
+      themeMode: ThemeMode.system,
       home: const GridDesignerPage(),
     );
   }
+}
+
+ThemeData _buildTheme(Brightness brightness) {
+  final colorScheme = ColorScheme.fromSeed(
+    seedColor: const Color(0xFF992C2F),
+    brightness: brightness,
+  );
+  final isDark = brightness == Brightness.dark;
+
+  return ThemeData(
+    useMaterial3: true,
+    brightness: brightness,
+    colorScheme: colorScheme,
+    scaffoldBackgroundColor: isDark
+        ? const Color(0xFF101816)
+        : const Color(0xFFCAB7AA),
+    canvasColor: colorScheme.surface,
+    dividerColor: colorScheme.outlineVariant,
+  );
 }

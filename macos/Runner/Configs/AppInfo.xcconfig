@@ -5,7 +5,7 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = thai_silk
+PRODUCT_NAME = Thai Silk
 
 // The application's bundle identifier
 PRODUCT_BUNDLE_IDENTIFIER = io.cyblox.thaiSilk

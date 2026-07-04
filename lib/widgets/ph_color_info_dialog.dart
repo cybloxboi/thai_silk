@@ -29,6 +29,8 @@ class _PhColorHelpDialogState extends State<PhColorHelpDialog> {
   PhColorSwatch get _selectedSwatch => widget.swatches[_selectedIndex];
 
   Widget _buildStepItem(int index, String text) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -38,13 +40,16 @@ class _PhColorHelpDialogState extends State<PhColorHelpDialog> {
             width: 24,
             height: 24,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: Color(0xFFEAF3EF),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest,
               shape: BoxShape.circle,
             ),
             child: Text(
               '${index + 1}',
-              style: const TextStyle(fontWeight: FontWeight.w700),
+              style: TextStyle(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -63,6 +68,8 @@ class _PhColorHelpDialogState extends State<PhColorHelpDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return AlertDialog(
       title: const Text('คำแนะนำการย้อมสีไหมจากครั่ง'),
       content: ConstrainedBox(
@@ -75,7 +82,7 @@ class _PhColorHelpDialogState extends State<PhColorHelpDialog> {
               Text(
                 'เลือก pH ด้านล่างเพื่อดูข้อมูล และแตะสีในพาเลตเพื่อเลือกใช้งาน',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF4B5563),
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 12),
@@ -87,7 +94,7 @@ class _PhColorHelpDialogState extends State<PhColorHelpDialog> {
                     ChoiceChip(
                       label: Text('pH ${widget.swatches[index].pHValue}'),
                       selected: _selectedIndex == index,
-                      selectedColor: const Color(0xFFD6F0E8),
+                      selectedColor: colorScheme.primaryContainer,
                       onSelected: (_) {
                         setState(() {
                           _selectedIndex = index;
@@ -118,7 +125,7 @@ class _PhColorHelpDialogState extends State<PhColorHelpDialog> {
               InfoTile(label: 'L*a*b*', value: _selectedSwatch.lab),
               const SizedBox(height: 16),
               Text(
-                'อุปกรณ์ที่ต้องใช้',
+                'ส่วนประกอบที่ต้องใช้',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
