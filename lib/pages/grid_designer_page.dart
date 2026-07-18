@@ -936,72 +936,80 @@ class _GridDesignerPageState extends State<GridDesignerPage> {
         return;
       }
 
-      if (!mounted) {
-        return;
-      }
-
-      final importSettings = await showDialog<PixelImageImportSettings>(
-        context: context,
-        builder: (dialogContext) {
-          return PixelImageImportDialog(
-            maxColumns: workbook.columns,
-            maxRows: workbook.rows,
-          );
-        },
-      );
-      if (importSettings == null) {
-        return;
-      }
-
-      final targetColumns = importSettings.mode == PixelImageImportMode.full
-          ? workbook.columns
-          : importSettings.columns;
-      final targetRows = importSettings.mode == PixelImageImportMode.full
-          ? workbook.rows
-          : importSettings.rows;
-
       final imageBytes = await file.readAsBytes();
-      final importedCells = await PixelImageService.buildPixelGrid(
-        imageBytes: imageBytes,
-        columns: targetColumns,
-        rows: targetRows,
-        maxColors: importSettings.maxColors,
-      );
-      final nextSheet = GridSheet.blank(
-        name: activeSheet.name,
-        rows: workbook.rows,
-        columns: workbook.columns,
-      );
-      for (
-        var row = 0;
-        row < importedCells.length && row < workbook.rows;
-        row++
-      ) {
-        final importedRow = importedCells[row];
-        for (
-          var column = 0;
-          column < importedRow.length && column < workbook.columns;
-          column++
-        ) {
-          nextSheet.cells[row][column] = importedRow[column];
+      final previewImage = await PixelImageService.decodeImage(imageBytes);
+      try {
+        if (!mounted) {
+          return;
         }
-      }
-      _applyWorkbookChange(
-        workbook.replaceSheet(workbook.activeSheetIndex, nextSheet),
-      );
-      setState(() {
-        patternSelection = null;
-        patternSelectionMode = false;
-        _historyRecordedForGesture = false;
-      });
 
-      if (!mounted) {
-        return;
-      }
+        final importSettings = await showDialog<PixelImageImportSettings>(
+          context: context,
+          builder: (dialogContext) {
+            return PixelImageImportDialog(
+              maxColumns: workbook.columns,
+              maxRows: workbook.rows,
+              previewImage: previewImage,
+              fileName: file.name,
+            );
+          },
+        );
+        if (importSettings == null) {
+          return;
+        }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('นำเข้ารูปภาพ ${file.name} แล้ว')));
+        final targetColumns = importSettings.mode == PixelImageImportMode.full
+            ? workbook.columns
+            : importSettings.columns;
+        final targetRows = importSettings.mode == PixelImageImportMode.full
+            ? workbook.rows
+            : importSettings.rows;
+
+        final importedCells = await PixelImageService.buildPixelGridFromImage(
+          image: previewImage,
+          columns: targetColumns,
+          rows: targetRows,
+          maxColors: importSettings.maxColors,
+          fitMode: importSettings.fitMode,
+        );
+        final nextSheet = GridSheet.blank(
+          name: activeSheet.name,
+          rows: workbook.rows,
+          columns: workbook.columns,
+        );
+        for (
+          var row = 0;
+          row < importedCells.length && row < workbook.rows;
+          row++
+        ) {
+          final importedRow = importedCells[row];
+          for (
+            var column = 0;
+            column < importedRow.length && column < workbook.columns;
+            column++
+          ) {
+            nextSheet.cells[row][column] = importedRow[column];
+          }
+        }
+        _applyWorkbookChange(
+          workbook.replaceSheet(workbook.activeSheetIndex, nextSheet),
+        );
+        setState(() {
+          patternSelection = null;
+          patternSelectionMode = false;
+          _historyRecordedForGesture = false;
+        });
+
+        if (!mounted) {
+          return;
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('นำเข้ารูปภาพ ${file.name} แล้ว')),
+        );
+      } finally {
+        previewImage.dispose();
+      }
     } catch (error) {
       if (!mounted) {
         return;

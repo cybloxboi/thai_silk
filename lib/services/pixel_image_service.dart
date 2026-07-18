@@ -1,53 +1,224 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+enum PixelImageFitMode { cover, contain }
+
 class PixelImageService {
+  static Future<ui.Image> decodeImage(Uint8List imageBytes) async {
+    final codec = await ui.instantiateImageCodec(imageBytes);
+    try {
+      final frame = await codec.getNextFrame();
+      return frame.image;
+    } finally {
+      codec.dispose();
+    }
+  }
+
   static Future<List<List<Color?>>> buildPixelGrid({
     required Uint8List imageBytes,
     required int columns,
     required int rows,
     int maxColors = 16,
+    PixelImageFitMode fitMode = PixelImageFitMode.cover,
   }) async {
     if (columns <= 0 || rows <= 0) {
       return const <List<Color?>>[];
     }
 
-    final codec = await ui.instantiateImageCodec(
-      imageBytes,
-      targetWidth: columns,
-      targetHeight: rows,
-    );
-    final frame = await codec.getNextFrame();
-    final image = frame.image;
+    final image = await decodeImage(imageBytes);
     try {
-      final byteData = await image.toByteData(
-        format: ui.ImageByteFormat.rawRgba,
+      return await buildPixelGridFromImage(
+        image: image,
+        columns: columns,
+        rows: rows,
+        maxColors: maxColors,
+        fitMode: fitMode,
       );
-      if (byteData == null) {
-        return _blankGrid(rows, columns);
-      }
-
-      final bytes = byteData.buffer.asUint8List();
-      final grid = List.generate(rows, (row) {
-        return List.generate(columns, (column) {
-          final index = (row * columns + column) * 4;
-          final red = bytes[index];
-          final green = bytes[index + 1];
-          final blue = bytes[index + 2];
-          final alpha = bytes[index + 3];
-          if (alpha == 0) {
-            return null;
-          }
-          return Color.fromARGB(alpha, red, green, blue);
-        });
-      });
-      return _reduceColors(grid, maxColors.clamp(1, 256).toInt());
     } finally {
       image.dispose();
-      codec.dispose();
     }
+  }
+
+  static Future<List<List<Color?>>> buildPixelGridFromImage({
+    required ui.Image image,
+    required int columns,
+    required int rows,
+    int maxColors = 16,
+    PixelImageFitMode fitMode = PixelImageFitMode.cover,
+  }) async {
+    if (columns <= 0 || rows <= 0) {
+      return const <List<Color?>>[];
+    }
+
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    if (byteData == null) {
+      return _blankGrid(rows, columns);
+    }
+
+    final bytes = byteData.buffer.asUint8List();
+    final grid = _sampleImageToGrid(
+      bytes: bytes,
+      sourceWidth: image.width,
+      sourceHeight: image.height,
+      columns: columns,
+      rows: rows,
+      fitMode: fitMode,
+    );
+    final reduced = _reduceColors(grid, maxColors.clamp(1, 256).toInt());
+    return reduced;
+  }
+
+  static List<List<Color?>> _sampleImageToGrid({
+    required Uint8List bytes,
+    required int sourceWidth,
+    required int sourceHeight,
+    required int columns,
+    required int rows,
+    required PixelImageFitMode fitMode,
+  }) {
+    if (sourceWidth <= 0 || sourceHeight <= 0) {
+      return _blankGrid(rows, columns);
+    }
+
+    final scale = fitMode == PixelImageFitMode.cover
+        ? math.max(columns / sourceWidth, rows / sourceHeight)
+        : math.min(columns / sourceWidth, rows / sourceHeight);
+    final renderedWidth = sourceWidth * scale;
+    final renderedHeight = sourceHeight * scale;
+    final offsetX = (columns - renderedWidth) / 2;
+    final offsetY = (rows - renderedHeight) / 2;
+
+    return List.generate(rows, (row) {
+      return List.generate(columns, (column) {
+        final centerX = column + 0.5;
+        final centerY = row + 0.5;
+        if (fitMode == PixelImageFitMode.contain &&
+            (centerX < offsetX ||
+                centerX > offsetX + renderedWidth ||
+                centerY < offsetY ||
+                centerY > offsetY + renderedHeight)) {
+          return null;
+        }
+
+        final sampleX = (centerX - offsetX) / scale;
+        final sampleY = (centerY - offsetY) / scale;
+        return _sampleColor(
+          bytes: bytes,
+          sourceWidth: sourceWidth,
+          sourceHeight: sourceHeight,
+          x: sampleX,
+          y: sampleY,
+        );
+      });
+    });
+  }
+
+  static Color? _sampleColor({
+    required Uint8List bytes,
+    required int sourceWidth,
+    required int sourceHeight,
+    required double x,
+    required double y,
+  }) {
+    final clampedX = x.clamp(0.0, (sourceWidth - 1).toDouble());
+    final clampedY = y.clamp(0.0, (sourceHeight - 1).toDouble());
+
+    final left = clampedX.floor();
+    final top = clampedY.floor();
+    final right = math.min(left + 1, sourceWidth - 1);
+    final bottom = math.min(top + 1, sourceHeight - 1);
+    final xWeight = clampedX - left;
+    final yWeight = clampedY - top;
+
+    final topLeft = _readPixel(bytes, sourceWidth, left, top);
+    final topRight = _readPixel(bytes, sourceWidth, right, top);
+    final bottomLeft = _readPixel(bytes, sourceWidth, left, bottom);
+    final bottomRight = _readPixel(bytes, sourceWidth, right, bottom);
+
+    final topBlend = _blendPixels(topLeft, topRight, xWeight);
+    final bottomBlend = _blendPixels(bottomLeft, bottomRight, xWeight);
+    final sampled = _blendPixels(topBlend, bottomBlend, yWeight);
+    if (sampled.alpha == 0) {
+      return null;
+    }
+
+    return Color.fromARGB(
+      sampled.alpha,
+      sampled.red,
+      sampled.green,
+      sampled.blue,
+    );
+  }
+
+  static _RgbaPixel _readPixel(Uint8List bytes, int sourceWidth, int x, int y) {
+    final index = (y * sourceWidth + x) * 4;
+    return _RgbaPixel(
+      red: bytes[index],
+      green: bytes[index + 1],
+      blue: bytes[index + 2],
+      alpha: bytes[index + 3],
+    );
+  }
+
+  static _RgbaPixel _blendPixels(
+    _RgbaPixel left,
+    _RgbaPixel right,
+    double weight,
+  ) {
+    final alpha = _lerpChannel(left.alpha, right.alpha, weight);
+    if (alpha == 0) {
+      return const _RgbaPixel(alpha: 0, red: 0, green: 0, blue: 0);
+    }
+
+    return _RgbaPixel(
+      alpha: alpha,
+      red: _blendPremultipliedChannel(
+        left.red,
+        left.alpha,
+        right.red,
+        right.alpha,
+        weight,
+        alpha,
+      ),
+      green: _blendPremultipliedChannel(
+        left.green,
+        left.alpha,
+        right.green,
+        right.alpha,
+        weight,
+        alpha,
+      ),
+      blue: _blendPremultipliedChannel(
+        left.blue,
+        left.alpha,
+        right.blue,
+        right.alpha,
+        weight,
+        alpha,
+      ),
+    );
+  }
+
+  static int _lerpChannel(int start, int end, double weight) {
+    return (start + (end - start) * weight).round().clamp(0, 255).toInt();
+  }
+
+  static int _blendPremultipliedChannel(
+    int leftChannel,
+    int leftAlpha,
+    int rightChannel,
+    int rightAlpha,
+    double weight,
+    int alpha,
+  ) {
+    final leftPremultiplied = leftChannel * leftAlpha;
+    final rightPremultiplied = rightChannel * rightAlpha;
+    final blended =
+        leftPremultiplied + (rightPremultiplied - leftPremultiplied) * weight;
+    return (blended / alpha).round().clamp(0, 255).toInt();
   }
 
   static List<List<Color?>> _blankGrid(int rows, int columns) {
@@ -149,6 +320,20 @@ class PixelImageService {
   static int _channelValue(double value) {
     return (value * 255).round().clamp(0, 255).toInt();
   }
+}
+
+class _RgbaPixel {
+  const _RgbaPixel({
+    required this.alpha,
+    required this.red,
+    required this.green,
+    required this.blue,
+  });
+
+  final int alpha;
+  final int red;
+  final int green;
+  final int blue;
 }
 
 class _PalettePixel {
