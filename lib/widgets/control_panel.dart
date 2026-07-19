@@ -879,12 +879,11 @@ class _ControlsPanelState extends State<ControlsPanel>
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  if (kDebugMode)
-                    OutlinedButton.icon(
-                      onPressed: _showManualDialog,
-                      icon: const Icon(Icons.menu_book_outlined),
-                      label: const Text('คู่มือ'),
-                    ),
+                  OutlinedButton.icon(
+                    onPressed: _showManualDialog,
+                    icon: const Icon(Icons.menu_book_outlined),
+                    label: const Text('คู่มือ'),
+                  ),
                   OutlinedButton.icon(
                     onPressed: _showCreditsDialog,
                     icon: const Icon(Icons.info_outline),
